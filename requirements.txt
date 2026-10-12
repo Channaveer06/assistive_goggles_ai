@@ -9,3 +9,5 @@ pyttsx3
 networkx
 opencv-python
 pillow
+SpeechRecognition
+PyAudio

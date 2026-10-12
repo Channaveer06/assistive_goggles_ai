@@ -8,8 +8,9 @@ from transformers import AutoImageProcessor, AutoModelForDepthEstimation
 import config
 
 class ReflexDepthEngine:
-    def __init__(self, arbitrator):
+    def __init__(self, arbitrator, social_engine=None):
         self.arbitrator = arbitrator
+        self.social_engine = social_engine
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Initializing Reflex & Metric Depth Engine on {self.device.upper()}...")
 
@@ -24,6 +25,10 @@ class ReflexDepthEngine:
         self.depth_model = AutoModelForDepthEstimation.from_pretrained(
             config.METRIC_DEPTH_MODEL
         ).to(self.device).eval()
+
+    def set_social_engine(self, social_engine):
+        """Connects social engine for unified person identity & micro-cue announcements."""
+        self.social_engine = social_engine
 
     def check_frame_quality(self, frame, timestamp):
         """VizWiz-inspired pre-check for dark rooms or severe camera blur."""
@@ -111,8 +116,19 @@ class ReflexDepthEngine:
                 elif dist_m <= config.WARNING_DISTANCE_M:
                     color = (0, 165, 255)
 
+                face_name, face_cues = None, None
+                if label_name == "person" and self.social_engine is not None:
+                    face_name, face_cues = self.social_engine.get_face_for_person_box((x1, y1, x2, y2))
+
+                if label_name == "person" and face_name and not face_name.startswith("Verifying"):
+                    announced_name = face_name if face_name != "Unknown person" else "person"
+                    cues_str = f", {' and '.join(face_cues)}" if face_cues else ""
+                else:
+                    announced_name = label_name
+                    cues_str = ""
+
                 cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
-                tag = f"ID#{track_id} {label_name}: {dist_m:.1f}m ({direction})"
+                tag = f"ID#{track_id} {announced_name}: {dist_m:.1f}m ({direction})"
                 cv2.putText(annotated, tag, (x1, max(20, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
 
                 # Trigger audio if inside warning zone and cooldown has expired
@@ -120,7 +136,7 @@ class ReflexDepthEngine:
                     if self.arbitrator.should_announce_track(track_id, dist_m, timestamp):
                         priority = 1 if dist_m <= config.CRITICAL_DANGER_M else 2
                         prefix = "Stop! " if priority == 1 else ""
-                        msg = f"{prefix}{label_name} {dist_m:.1f} meters {direction}"
+                        msg = f"{prefix}{announced_name} {dist_m:.1f} meters {direction}{cues_str}"
                         triggered_speech = self.arbitrator.emit_alert(priority, msg, timestamp, key=f"trk_{track_id}")
 
         # Create colorized metric depth visualization for side-by-side inspection

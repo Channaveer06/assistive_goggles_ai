@@ -116,16 +116,41 @@ class PriorityAudioArbitrator:
         return "straight ahead"
 
     def should_announce_track(self, track_id, distance_m, current_time):
-        """Prevents repeating 'Chair ahead' 30 times a second for the same object."""
-        last_time, last_dist = self.track_memory.get(track_id, (0.0, 99.0))
-        # Always announce immediately if the object suddenly moved much closer (<1.2m)
+        """
+        Smart Stationary-Object Silence:
+        Prevents repeating the same stationary obstacle every 4 seconds.
+        Once announced, only re-announces if:
+        (a) It moved closer by at least 0.35m (approach detected), OR
+        (b) Inside CRITICAL_DANGER_M (<=1.2m) and at least 6.0s passed, OR
+        (c) More than 30.0s have passed since it was last mentioned.
+        """
+        if track_id not in self.track_memory:
+            self.track_memory[track_id] = (current_time, distance_m)
+            return True
+
+        last_time, last_dist = self.track_memory[track_id]
+        time_elapsed = current_time - last_time
+
+        # Immediate alert if object suddenly breached critical danger threshold (<1.2m)
         if distance_m <= config.CRITICAL_DANGER_M and last_dist > config.CRITICAL_DANGER_M:
             self.track_memory[track_id] = (current_time, distance_m)
             return True
-        # Otherwise enforce the cooldown timer
-        if (current_time - last_time) >= config.TRACK_COOLDOWN_SEC:
+
+        # Condition (a): Object moved closer by at least 0.35 meters
+        if (last_dist - distance_m) >= 0.35:
             self.track_memory[track_id] = (current_time, distance_m)
             return True
+
+        # Condition (b): Inside critical danger zone and >= 6.0 seconds have passed
+        if distance_m <= config.CRITICAL_DANGER_M and time_elapsed >= 6.0:
+            self.track_memory[track_id] = (current_time, distance_m)
+            return True
+
+        # Condition (c): Periodic refresh after 30.0 seconds
+        if time_elapsed >= 30.0:
+            self.track_memory[track_id] = (current_time, distance_m)
+            return True
+
         return False
 
     def emit_alert(self, priority, message, current_time, key="general"):

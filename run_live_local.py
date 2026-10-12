@@ -6,9 +6,12 @@ Runs the complete assistive vision & spatial audio pipeline locally on laptop ha
 2. Continuous ReflexDepthEngine (YOLOv11 + Metric Depth Indoors in meters).
 3. Continuous EpisodicObjectMemory (records personal items near room landmarks).
 4. Asynchronous FaceAndSocialEngine every 10 frames (InsightFace 512-D + YOLOv11-Pose cues).
-5. Non-blocking SAPI.SpVoice / PowerShell zero-lag offline audio arbitration.
-6. Live keyboard hotkeys & triggers (working from BOTH Terminal and OpenCV Window):
-   [e] Enroll live face in front of webcam into ChromaDB
+5. Unified Person + Face announcement ("Channaveer 1.5 meters straight ahead, looking at you").
+6. Non-blocking SAPI.SpVoice / PowerShell zero-lag offline audio arbitration.
+7. Smart Stationary-Object Silence (no repetitive announcements for stationary objects).
+8. Real Name Face Enrollment with 5-second non-blocking console prompt.
+9. Hands-Free Microphone Voice Commands alongside Dual Keyboard Hotkeys (Terminal + HUD):
+   [e] Enroll live face in front of webcam into ChromaDB (custom name)
    [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)
    [f] Find where I last left my cell phone or bottle
    [b] Speak turn-by-turn Indoor Navigation route to the bathroom
@@ -33,6 +36,11 @@ try:
 except ImportError:
     msvcrt = None
 
+try:
+    import speech_recognition as sr
+except ImportError:
+    sr = None
+
 import cv2
 import numpy as np
 
@@ -50,10 +58,11 @@ from modules.indoor_nav import IndoorTopologicalNavigator
 
 
 class LiveLocalGogglesApp:
-    def __init__(self, camera_idx=0, headless=False, test_mode=False):
+    def __init__(self, camera_idx=0, headless=False, test_mode=False, disable_mic=False):
         self.camera_idx = camera_idx
         self.headless = headless
         self.test_mode = test_mode
+        self.disable_mic = disable_mic
         self.current_room = "study_room"
         self.is_running = False
         self.window_name = "Assistive Smart Goggles AI — Live HUD"
@@ -69,14 +78,15 @@ class LiveLocalGogglesApp:
         self.io = HardwareIOBridge(self.arbitrator, video_source=camera_idx)
 
         # 3. Initialize Core Vision & Independence Modules
-        print("\n[1/5] Loading Reflex Depth Engine (YOLOv11 + Metric Depth)...")
-        self.reflex = ReflexDepthEngine(self.arbitrator)
-
-        print("\n[2/5] Loading Episodic Object Memory...")
-        self.memory = EpisodicObjectMemory()
-
-        print("\n[3/5] Loading Face & Social Micro-Cue Engine...")
+        print("\n[1/5] Loading Face & Social Micro-Cue Engine...")
         self.social = FaceAndSocialEngine(self.arbitrator)
+
+        print("\n[2/5] Loading Reflex Depth Engine (YOLOv11 + Metric Depth)...")
+        # Connect social engine for Unified Person + Face Announcements
+        self.reflex = ReflexDepthEngine(self.arbitrator, social_engine=self.social)
+
+        print("\n[3/5] Loading Episodic Object Memory...")
+        self.memory = EpisodicObjectMemory()
 
         print("\n[4/5] Loading Fingertip OCR, Currency & Lighting Coach...")
         self.ocr = FingerOCRAndUtilities(self.arbitrator)
@@ -86,8 +96,6 @@ class LiveLocalGogglesApp:
 
         # Asynchronous worker for FaceAndSocialEngine (runs every 10 frames)
         self.face_task_queue = queue.Queue(maxsize=1)
-        self.latest_face_annotations = []
-        self.face_worker_lock = threading.Lock()
         self.face_worker_thread = threading.Thread(target=self._async_face_worker, daemon=True)
         self.face_worker_thread.start()
 
@@ -96,6 +104,12 @@ class LiveLocalGogglesApp:
         self.ocr_worker_thread = threading.Thread(target=self._async_ocr_worker, daemon=True)
         self.ocr_worker_thread.start()
 
+        # Hands-free microphone voice listener queue
+        self.voice_command_queue = queue.Queue(maxsize=5)
+        self.mic_active = False
+        if sr is not None and not self.disable_mic and not self.test_mode:
+            self._start_voice_listener()
+
         # Last status announcement to display on HUD
         self.last_hud_message = "Ready. Press [h] for hotkeys or [q] to quit."
         self.last_hud_message_time = time.time()
@@ -103,24 +117,77 @@ class LiveLocalGogglesApp:
         print("\n" + "=" * 65)
         print("✅ ALL SYSTEMS ONLINE — ZERO-LAG ASSISTIVE GOGGLES READY")
         print("   HOTKEYS (Work in Terminal & HUD Window):")
-        print("   [e] Enroll live face into ChromaDB")
+        print("   [e] Enroll live face into ChromaDB (name prompt)")
         print("   [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)")
         print("   [f] Find where I last left my cell phone or bottle")
         print("   [b] Turn-by-turn Navigation route to the bathroom")
         print("   [l] Check Room Light & Center Object Color")
         print("   [s] Trigger Guardian Emergency SOS")
         print("   [q] Quit cleanly")
+        if self.mic_active:
+            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'bathroom', 'find', 'read', 'light', 'sos'")
         print("=" * 65 + "\n")
 
+    def _start_voice_listener(self):
+        """Starts background daemon thread for hands-free microphone voice recognition."""
+        voice_thread = threading.Thread(target=self._voice_listener_worker, daemon=True)
+        voice_thread.start()
+
+    def _voice_listener_worker(self):
+        """Continuously listens for user voice commands without blocking OpenCV loop."""
+        recognizer = sr.Recognizer()
+        recognizer.energy_threshold = 300
+        recognizer.dynamic_energy_threshold = True
+        recognizer.pause_threshold = 0.6
+
+        try:
+            mic = sr.Microphone()
+            with mic as source:
+                recognizer.adjust_for_ambient_noise(source, duration=0.8)
+            self.mic_active = True
+            print("🎙️ [MIC ONLINE] Laptop microphone listening for voice commands...")
+        except Exception as e:
+            print(f"⚠️ Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
+            return
+
+        while self.is_running:
+            try:
+                with mic as source:
+                    audio = recognizer.listen(source, timeout=3.0, phrase_time_limit=4.0)
+                text = recognizer.recognize_google(audio).lower().strip()
+                print(f"🗣️ [VOICE DETECTED]: \"{text}\"")
+
+                if any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
+                    self.voice_command_queue.put('b')
+                elif any(w in text for w in ["find", "where is", "phone", "bottle", "item"]):
+                    self.voice_command_queue.put('f')
+                elif any(w in text for w in ["read", "medicine", "currency", "money", "rupee"]):
+                    self.voice_command_queue.put('r')
+                elif any(w in text for w in ["light", "color", "dark"]):
+                    self.voice_command_queue.put('l')
+                elif any(w in text for w in ["enroll", "save person", "save face"]):
+                    self.voice_command_queue.put('e')
+                elif any(w in text for w in ["sos", "help", "emergency", "guardian"]):
+                    self.voice_command_queue.put('s')
+                elif any(w in text for w in ["quit", "exit", "stop program"]):
+                    self.voice_command_queue.put('q')
+            except (sr.WaitTimeoutError, sr.UnknownValueError):
+                continue
+            except Exception:
+                time.sleep(0.5)
+
     def _async_face_worker(self):
-        """Processes InsightFace + YOLOv11-Pose asynchronously without blocking camera loop."""
+        """Processes InsightFace + YOLOv11-Pose asynchronously and feeds unified announcements."""
         while True:
             try:
                 frame_bgr, timestamp = self.face_task_queue.get()
                 if frame_bgr is None:
                     break
 
-                annotated_faces, announcements = self.social.analyze_people(frame_bgr, timestamp=timestamp)
+                # emit_audio=False so ReflexDepthEngine handles unified name + distance + cues
+                annotated_faces, announcements = self.social.analyze_people(
+                    frame_bgr, timestamp=timestamp, emit_audio=False
+                )
                 if announcements:
                     self._update_hud_status(announcements[-1])
 
@@ -129,7 +196,7 @@ class LiveLocalGogglesApp:
                 print(f"Face worker error: {e}")
 
     def _async_ocr_worker(self):
-        """Executes EasyOCR in the background upon hotkey press."""
+        """Executes EasyOCR in the background upon hotkey or voice press."""
         while True:
             try:
                 frame_bgr, timestamp = self.ocr_task_queue.get()
@@ -146,15 +213,53 @@ class LiveLocalGogglesApp:
         self.last_hud_message = text
         self.last_hud_message_time = time.time()
 
+    def prompt_enroll_name(self, timeout=5.0, default="Friend"):
+        """Prompts for real name in terminal with a 5-second non-blocking timeout."""
+        print("\n" + "=" * 55)
+        print(f"👤 [FACE ENROLLMENT] Type person's name & press Enter:")
+        print(f"   (Auto-defaulting to '{default}' in {int(timeout)}s if no input)... ", end="", flush=True)
+
+        if msvcrt is None or self.test_mode:
+            print(f"\n✅ Enrolling as: '{default}'")
+            return default
+
+        start_t = time.time()
+        chars = []
+        while time.time() - start_t < timeout:
+            if msvcrt.kbhit():
+                ch = msvcrt.getch()
+                if ch in [b'\r', b'\n']:
+                    break
+                elif ch == b'\x08':  # Backspace
+                    if chars:
+                        chars.pop()
+                        sys.stdout.write("\b \b")
+                        sys.stdout.flush()
+                else:
+                    try:
+                        c = ch.decode("utf-8")
+                        chars.append(c)
+                        sys.stdout.write(c)
+                        sys.stdout.flush()
+                    except Exception:
+                        pass
+            time.sleep(0.04)
+
+        entered = "".join(chars).strip()
+        chosen_name = entered if entered else default
+        print(f"\n✅ Enrolling as: '{chosen_name}'")
+        return chosen_name
+
     def handle_hotkey(self, key_char, current_frame, timestamp):
-        """Dispatches keyboard controls with Priority 0 immediate preemption."""
+        """Dispatches keyboard controls and voice triggers with Priority 0 immediate preemption."""
         key_char = key_char.lower().strip()
 
         if key_char == 'e':
-            # [e] Enroll live face in front of webcam into ChromaDB
+            # [e] Enroll live face in front of webcam with Real Name prompt
             print("📸 [ACTION] Live Face Enrollment Triggered...")
-            self.arbitrator.emit_alert(0, "Capturing face for enrollment. Please look directly at the camera.", timestamp, key="enroll_hint")
-            success, msg = self.social.enroll_known_person(current_frame, person_name="User")
+            self.arbitrator.emit_alert(0, "Face enrollment triggered. Please look directly at the camera.", timestamp, key="enroll_hint")
+            person_name = self.prompt_enroll_name(timeout=5.0, default="Friend")
+            success, msg = self.social.enroll_known_person(current_frame, person_name=person_name)
             self.arbitrator.emit_alert(0, msg, timestamp, key="enroll_result")
             self._update_hud_status(msg)
 
@@ -206,7 +311,8 @@ class LiveLocalGogglesApp:
 
         # Top banner for telemetry & room info
         top_bar = np.zeros((46, w, 3), dtype=np.uint8)
-        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  FRAME: {frame_count}"
+        mic_status = "MIC: ON" if self.mic_active else "MIC: OFF"
+        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}"
         cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2, cv2.LINE_AA)
 
         # Bottom banner for hotkeys and recent speech
@@ -274,7 +380,7 @@ class LiveLocalGogglesApp:
                         time.sleep(0.01)
                         continue
 
-                # 2. Continuous Reflex & Metric Depth (Inner 50% median meters)
+                # 2. Continuous Reflex & Metric Depth (Inner 50% median meters) with Unified Person Announcements
                 combined_hud, speech = self.reflex.process_frame(frame, timestamp=now)
                 if speech:
                     self._update_hud_status(speech)
@@ -298,11 +404,17 @@ class LiveLocalGogglesApp:
                 # 5. Composite Final Live HUD
                 hud_display = self.draw_hud_overlays(combined_hud, current_fps, frame_count)
 
-                # 6. Check for Hotkey Input (from BOTH Terminal and OpenCV Window)
+                # 6. Check for Hotkey / Voice Input (from Microphone, Terminal, and OpenCV Window)
                 key_char = None
 
-                # (a) Check Windows Console Input via msvcrt (non-blocking)
-                if msvcrt is not None:
+                # (a) Check Hands-free Microphone Voice Command Queue
+                try:
+                    key_char = self.voice_command_queue.get_nowait()
+                except queue.Empty:
+                    pass
+
+                # (b) Check Windows Console Input via msvcrt (non-blocking)
+                if key_char is None and msvcrt is not None:
                     while msvcrt.kbhit():
                         raw_ch = msvcrt.getch()
                         try:
@@ -310,14 +422,14 @@ class LiveLocalGogglesApp:
                         except Exception:
                             key_char = None
 
-                # (b) Check OpenCV Window Input (if not headless)
+                # (c) Check OpenCV Window Input (if not headless)
                 if not self.headless:
                     cv2.imshow(self.window_name, hud_display)
                     cv_key = cv2.waitKey(1) & 0xFF
-                    if cv_key != 255:
+                    if cv_key != 255 and key_char is None:
                         key_char = chr(cv_key).lower()
 
-                # (c) Dispatch hotkey
+                # (d) Dispatch hotkey
                 if key_char:
                     if key_char == 'q':
                         print("🛑 User initiated clean quit via [q] key.")
@@ -367,13 +479,15 @@ def main():
     parser.add_argument("--camera", type=int, default=0, help="Webcam device index (default: 0)")
     parser.add_argument("--headless", action="store_true", help="Run without cv2.imshow GUI window")
     parser.add_argument("--test", action="store_true", help="Run automated test check with synthetic triggers")
+    parser.add_argument("--disable-mic", action="store_true", help="Disable microphone voice listener")
     parser.add_argument("--frames", type=int, default=None, help="Maximum frames to run before auto-exiting")
     args = parser.parse_args()
 
     app = LiveLocalGogglesApp(
         camera_idx=args.camera,
         headless=args.headless,
-        test_mode=args.test
+        test_mode=args.test,
+        disable_mic=args.disable_mic
     )
     app.run(max_frames=args.frames)
 

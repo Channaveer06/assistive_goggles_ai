@@ -39,6 +39,7 @@ class FaceAndSocialEngine:
         # 3-Frame Voting Buffers per track/person slot
         self.vote_history = defaultdict(lambda: deque(maxlen=3))
         self.verified_identities = {}  # {slot_id: ("Known Name" or "Unknown person", timestamp)}
+        self.latest_face_tracks = []
 
         # Thresholds
         self.KNOWN_SIMILARITY_THRESHOLD = 0.48   # ArcFace cosine similarity >= 0.48 -> Confirmed Known Person
@@ -124,15 +125,16 @@ class FaceAndSocialEngine:
             cues_by_box.append((box, social_tags))
         return cues_by_box
 
-    def analyze_people(self, frame_bgr, timestamp=0.0, slot_prefix="person"):
+    def analyze_people(self, frame_bgr, timestamp=0.0, slot_prefix="person", emit_audio=False):
         """
-        Runs InsightFace + 3-Frame Voting Gate + Social Micro-Cues and emits high-precision voice alerts.
+        Runs InsightFace + 3-Frame Voting Gate + Social Micro-Cues and updates verified face tracks.
         """
         h, w = frame_bgr.shape[:2]
         annotated = frame_bgr.copy()
         faces = self.face_app.get(frame_bgr)
         pose_cues = self.detect_social_cues(frame_bgr)
         announcements = []
+        self.latest_face_tracks = []
 
         for idx, face in enumerate(faces):
             x1, y1, x2, y2 = map(int, face.bbox)
@@ -185,10 +187,27 @@ class FaceAndSocialEngine:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.58, box_color, 2)
 
             if confirmed_identity and not confirmed_identity.startswith("Verifying"):
-                cue_speech = f", {' and '.join(person_cues)}" if person_cues else ""
-                spoken_msg = f"{confirmed_identity} is {direction}{cue_speech}"
-                emitted = self.arbitrator.emit_alert(2, spoken_msg, timestamp, key=f"face_{confirmed_identity}")
-                if emitted:
-                    announcements.append(emitted)
+                self.latest_face_tracks.append({
+                    "box": (x1, y1, x2, y2),
+                    "name": confirmed_identity,
+                    "cues": person_cues,
+                    "cx": face_cx,
+                    "cy": (y1 + y2) / 2.0
+                })
+
+                if emit_audio:
+                    cue_speech = f", {' and '.join(person_cues)}" if person_cues else ""
+                    spoken_msg = f"{confirmed_identity} is {direction}{cue_speech}"
+                    emitted = self.arbitrator.emit_alert(2, spoken_msg, timestamp, key=f"face_{confirmed_identity}")
+                    if emitted:
+                        announcements.append(emitted)
 
         return annotated, announcements
+
+    def get_face_for_person_box(self, person_box):
+        """Matches a YOLO person bounding box (x1, y1, x2, y2) to the latest verified face."""
+        px1, py1, px2, py2 = person_box
+        for f in self.latest_face_tracks:
+            if px1 - 30 <= f["cx"] <= px2 + 30 and py1 - 30 <= f["cy"] <= py1 + (py2 - py1) * 0.65:
+                return f["name"], f["cues"]
+        return None, None
