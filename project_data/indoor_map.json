@@ -1,0 +1,65 @@
+{
+  "nodes": {
+    "study_room": {
+      "x": 0.0,
+      "y": 0.0,
+      "door_sign": "STUDY"
+    },
+    "hallway_start": {
+      "x": 0.0,
+      "y": 3.0,
+      "door_sign": "CORRIDOR"
+    },
+    "hallway_mid": {
+      "x": 0.0,
+      "y": 7.0,
+      "door_sign": "WATER COOLER"
+    },
+    "hallway_end": {
+      "x": 0.0,
+      "y": 10.0,
+      "door_sign": "HALLWAY END"
+    },
+    "bathroom": {
+      "x": -3.0,
+      "y": 10.0,
+      "door_sign": "WASHROOM / BATHROOM"
+    },
+    "bedroom": {
+      "x": 3.5,
+      "y": 7.0,
+      "door_sign": "BEDROOM"
+    },
+    "main_exit": {
+      "x": 0.0,
+      "y": 14.0,
+      "door_sign": "EXIT"
+    }
+  },
+  "edges": [
+    [
+      "study_room",
+      "hallway_start"
+    ],
+    [
+      "hallway_start",
+      "hallway_mid"
+    ],
+    [
+      "hallway_mid",
+      "bedroom"
+    ],
+    [
+      "hallway_mid",
+      "hallway_end"
+    ],
+    [
+      "hallway_end",
+      "bathroom"
+    ],
+    [
+      "hallway_end",
+      "main_exit"
+    ]
+  ]
+}

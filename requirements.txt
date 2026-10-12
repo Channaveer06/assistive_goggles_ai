@@ -1,0 +1,11 @@
+ultralytics
+transformers
+timm
+onnxruntime
+insightface
+chromadb
+easyocr
+pyttsx3
+networkx
+opencv-python
+pillow

@@ -1,0 +1,351 @@
+"""
+Assistive Smart Goggles AI — Live Local Real-Time Execution Engine
+------------------------------------------------------------------
+Runs the complete assistive vision & spatial audio pipeline locally on laptop hardware:
+1. 30 FPS camera loop (cv2.VideoCapture(0)) with combined RGB + Metric Depth HUD.
+2. Continuous ReflexDepthEngine (YOLOv11 + Metric Depth Indoors in meters).
+3. Continuous EpisodicObjectMemory (records personal items near room landmarks).
+4. Asynchronous FaceAndSocialEngine every 10 frames (InsightFace 512-D + YOLOv11-Pose cues).
+5. Non-blocking pyttsx3 offline audio arbitration.
+6. Live keyboard hotkeys & triggers:
+   [e] Enroll live face in front of webcam into ChromaDB
+   [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)
+   [f] Find where I last left my cell phone or bottle
+   [b] Speak turn-by-turn Indoor Navigation route to the bathroom
+   [l] Check Room Light & Center Object Color
+   [s] Trigger Guardian SOS
+   [q] Quit cleanly
+"""
+
+import os
+import sys
+import time
+import argparse
+import threading
+import queue
+import cv2
+import numpy as np
+
+# Ensure local environment mode
+import config
+config.ENV_MODE = "LOCAL"
+
+from audio_arbitrator import PriorityAudioArbitrator
+from io_bridge import HardwareIOBridge
+from modules.reflex_depth import ReflexDepthEngine
+from modules.face_social import FaceAndSocialEngine
+from modules.episodic_memory import EpisodicObjectMemory
+from modules.finger_ocr import FingerOCRAndUtilities
+from modules.indoor_nav import IndoorTopologicalNavigator
+
+
+class LiveLocalGogglesApp:
+    def __init__(self, camera_idx=0, headless=False, test_mode=False):
+        self.camera_idx = camera_idx
+        self.headless = headless
+        self.test_mode = test_mode
+        self.current_room = "study_room"
+        self.is_running = False
+
+        print("=" * 65)
+        print("👓 BOOTING ASSISTIVE SMART GOGGLES AI — LOCAL HARDWARE ENGINE")
+        print("=" * 65)
+
+        # 1. Initialize Arbitrator with offline non-blocking pyttsx3
+        self.arbitrator = PriorityAudioArbitrator()
+
+        # 2. Initialize IO Bridge
+        self.io = HardwareIOBridge(self.arbitrator, video_source=camera_idx)
+
+        # 3. Initialize Core Vision & Independence Modules
+        print("\n[1/5] Loading Reflex Depth Engine (YOLOv11 + Metric Depth)...")
+        self.reflex = ReflexDepthEngine(self.arbitrator)
+
+        print("\n[2/5] Loading Episodic Object Memory...")
+        self.memory = EpisodicObjectMemory()
+
+        print("\n[3/5] Loading Face & Social Micro-Cue Engine...")
+        self.social = FaceAndSocialEngine(self.arbitrator)
+
+        print("\n[4/5] Loading Fingertip OCR, Currency & Lighting Coach...")
+        self.ocr = FingerOCRAndUtilities(self.arbitrator)
+
+        print("\n[5/5] Loading Indoor Topological Navigator...")
+        self.navigator = IndoorTopologicalNavigator(self.arbitrator)
+
+        # Asynchronous worker for FaceAndSocialEngine (runs every 10 frames)
+        self.face_task_queue = queue.Queue(maxsize=1)
+        self.latest_face_annotations = []
+        self.face_worker_lock = threading.Lock()
+        self.face_worker_thread = threading.Thread(target=self._async_face_worker, daemon=True)
+        self.face_worker_thread.start()
+
+        # Asynchronous worker for on-demand OCR (so hotkey [r] never freezes camera)
+        self.ocr_task_queue = queue.Queue(maxsize=1)
+        self.ocr_worker_thread = threading.Thread(target=self._async_ocr_worker, daemon=True)
+        self.ocr_worker_thread.start()
+
+        # Last status announcement to display on HUD
+        self.last_hud_message = "Ready. Press [h] for hotkeys or [q] to quit."
+        self.last_hud_message_time = time.time()
+
+        print("\n" + "=" * 65)
+        print("✅ ALL SYSTEMS ONLINE — ZERO-LAG ASSISTIVE GOGGLES READY")
+        print("   HOTKEYS:")
+        print("   [e] Enroll live face into ChromaDB")
+        print("   [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)")
+        print("   [f] Find where I last left my cell phone or bottle")
+        print("   [b] Turn-by-turn Navigation route to the bathroom")
+        print("   [l] Check Room Light & Center Object Color")
+        print("   [s] Trigger Guardian Emergency SOS")
+        print("   [q] Quit cleanly")
+        print("=" * 65 + "\n")
+
+    def _async_face_worker(self):
+        """Processes InsightFace + YOLOv11-Pose asynchronously without blocking camera loop."""
+        while True:
+            try:
+                frame_bgr, timestamp = self.face_task_queue.get()
+                if frame_bgr is None:
+                    break
+
+                annotated_faces, announcements = self.social.analyze_people(frame_bgr, timestamp=timestamp)
+                if announcements:
+                    self._update_hud_status(announcements[-1])
+
+                self.face_task_queue.task_done()
+            except Exception as e:
+                print(f"Face worker error: {e}")
+
+    def _async_ocr_worker(self):
+        """Executes EasyOCR in the background upon hotkey press."""
+        while True:
+            try:
+                frame_bgr, timestamp = self.ocr_task_queue.get()
+                if frame_bgr is None:
+                    break
+
+                _, speech = self.ocr.read_scene_or_fingertip(frame_bgr, timestamp=timestamp)
+                self._update_hud_status(speech)
+                self.ocr_task_queue.task_done()
+            except Exception as e:
+                print(f"OCR worker error: {e}")
+
+    def _update_hud_status(self, text):
+        self.last_hud_message = text
+        self.last_hud_message_time = time.time()
+
+    def handle_hotkey(self, key_char, current_frame, timestamp):
+        """Dispatches keyboard controls to the respective assistive modules."""
+        key_char = key_char.lower()
+
+        if key_char == 'e':
+            # [e] Enroll live face in front of webcam into ChromaDB
+            print("📸 [ACTION] Live Face Enrollment Triggered...")
+            self.arbitrator.emit_alert(2, "Capturing face for enrollment. Please look directly at the camera.", timestamp, key="enroll_hint")
+            success, msg = self.social.enroll_known_person(current_frame, person_name="User")
+            self.arbitrator.emit_alert(2, msg, timestamp, key="enroll_result")
+            self._update_hud_status(msg)
+
+        elif key_char == 'r':
+            # [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)
+            print("📖 [ACTION] Fingertip / Scene OCR Triggered...")
+            self.arbitrator.emit_alert(2, "Reading scene text...", timestamp, key="ocr_start")
+            if self.ocr_task_queue.empty():
+                self.ocr_task_queue.put((current_frame.copy(), timestamp))
+            self._update_hud_status("Analyzing text, currency & medicine labels...")
+
+        elif key_char == 'f':
+            # [f] Find where I last left my cell phone or bottle
+            print("🔍 [ACTION] Spatial Memory Item Query Triggered...")
+            phone_res = self.memory.query_item("cell phone")
+            bottle_res = self.memory.query_item("bottle")
+
+            # Prioritize whichever item has been seen
+            if "not seen" not in phone_res:
+                ans = phone_res
+            elif "not seen" not in bottle_res:
+                ans = bottle_res
+            else:
+                ans = "I have not seen your cell phone or bottle recently in this room."
+
+            self.arbitrator.emit_alert(2, ans, timestamp, key="find_item")
+            self._update_hud_status(ans)
+
+        elif key_char == 'b':
+            # [b] Speak turn-by-turn Indoor Navigation route to the bathroom
+            print("🧭 [ACTION] Indoor Navigation Route to Bathroom Triggered...")
+            _, speech = self.navigator.plan_voice_route(self.current_room, "bathroom", timestamp=timestamp)
+            self._update_hud_status(speech)
+
+        elif key_char == 'l':
+            # [l] Check Room Light & Center Object Color
+            print("💡 [ACTION] Room Light & Center Object Color Check Triggered...")
+            report = self.ocr.check_room_light_and_color(current_frame, timestamp=timestamp)
+            self._update_hud_status(report)
+
+        elif key_char == 's':
+            # [s] Trigger Guardian SOS
+            print("🚨 [ACTION] Guardian Emergency SOS Triggered!")
+            msg = self.io.trigger_guardian_sos(self.current_room, timestamp=timestamp)
+            self._update_hud_status(msg)
+
+    def draw_hud_overlays(self, combined_hud, fps, frame_count):
+        """Draws a high-visibility, accessible HUD overlay banner on the video stream."""
+        h, w = combined_hud.shape[:2]
+
+        # Top banner for telemetry & room info
+        top_bar = np.zeros((46, w, 3), dtype=np.uint8)
+        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  FRAME: {frame_count}"
+        cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2, cv2.LINE_AA)
+
+        # Bottom banner for hotkeys and recent speech
+        bottom_bar = np.zeros((64, w, 3), dtype=np.uint8)
+        hotkeys_text = "[e] Enroll  [r] OCR/Medicine  [f] Find Item  [b] Bathroom Nav  [l] Light/Color  [s] SOS  [q] Quit"
+        cv2.putText(bottom_bar, hotkeys_text, (16, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (180, 180, 180), 1, cv2.LINE_AA)
+
+        # Display latest spoken message
+        msg_display = f"SPEECH: {self.last_hud_message}"
+        if len(msg_display) > 110:
+            msg_display = msg_display[:107] + "..."
+        cv2.putText(bottom_bar, msg_display, (16, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2, cv2.LINE_AA)
+
+        return np.vstack((top_bar, combined_hud, bottom_bar))
+
+    def run(self, max_frames=None):
+        """Main real-time 30 FPS camera loop."""
+        self.is_running = True
+
+        # Open webcam or mock video source
+        opened = self.io.start_camera()
+        mock_source = False
+
+        if not opened or self.io.cap is None or not self.io.cap.isOpened():
+            print("⚠️ Hardware webcam could not be opened. Using test mock scene for execution.")
+            mock_source = True
+            # Load fallback test scene
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            test_img_path = os.path.join(base_dir, "test_scene.jpg")
+            if os.path.exists(test_img_path):
+                mock_frame = cv2.imread(test_img_path)
+                mock_frame = cv2.resize(mock_frame, (640, 480))
+            else:
+                mock_frame = np.full((480, 640, 3), 120, dtype=np.uint8)
+
+        frame_count = 0
+        start_time = time.time()
+        fps_timer = time.time()
+        current_fps = 30.0
+
+        print("🚀 Real-Time 30 FPS Processing Loop Active!")
+        self.arbitrator.emit_alert(2, "Assistive Goggles initialized. System active.", time.time(), key="boot_alert")
+
+        try:
+            while self.is_running:
+                now = time.time() - start_time
+                frame_count += 1
+
+                # 1. Grab Frame (Webcam or Mock Frame)
+                if mock_source:
+                    frame = mock_frame.copy()
+                    # Add subtle artificial motion for tracking
+                    shift_x = int(5 * np.sin(frame_count * 0.1))
+                    frame = np.roll(frame, shift_x, axis=1)
+                else:
+                    ret, frame = self.io.read_frame()
+                    if not ret or frame is None:
+                        print("⚠️ Camera frame drop. Retrying...")
+                        time.sleep(0.01)
+                        continue
+
+                # 2. Continuous Reflex & Metric Depth (Inner 50% median meters)
+                combined_hud, speech = self.reflex.process_frame(frame, timestamp=now)
+                if speech:
+                    self._update_hud_status(speech)
+
+                # 3. Continuous Episodic Object Memory Logging
+                if hasattr(self.reflex, "last_detections") and self.reflex.last_detections:
+                    self.memory.log_scene_detections(self.reflex.last_detections, current_room=self.current_room)
+
+                # 4. Asynchronous Face & Social Micro-Cues (Every 10 frames)
+                if frame_count % 10 == 0:
+                    if self.face_task_queue.empty():
+                        self.face_task_queue.put((frame.copy(), now))
+
+                # Calculate live FPS
+                if frame_count % 15 == 0:
+                    elapsed = time.time() - fps_timer
+                    if elapsed > 0:
+                        current_fps = 15.0 / elapsed
+                    fps_timer = time.time()
+
+                # 5. Composite Final Live HUD
+                hud_display = self.draw_hud_overlays(combined_hud, current_fps, frame_count)
+
+                # 6. Display HUD Window (if not headless)
+                if not self.headless:
+                    cv2.imshow("Assistive Smart Goggles AI — Live HUD", hud_display)
+                    key = cv2.waitKey(1) & 0xFF
+                    if key != 255:
+                        char = chr(key)
+                        if char == 'q':
+                            print("🛑 User initiated clean quit via [q] key.")
+                            break
+                        self.handle_hotkey(char, frame, now)
+
+                # Test mode auto-triggers for verification
+                if self.test_mode and frame_count in [5, 10, 15, 20, 25, 30]:
+                    test_keys = {5: 'f', 10: 'b', 15: 'l', 20: 's', 25: 'r', 30: 'e'}
+                    k = test_keys[frame_count]
+                    print(f"\n🧪 [TEST VERIFICATION] Auto-triggering key [{k}] at frame {frame_count}...")
+                    self.handle_hotkey(k, frame, now)
+
+                if max_frames is not None and frame_count >= max_frames:
+                    print(f"✅ Completed target frame count: {max_frames} frames.")
+                    break
+
+        except KeyboardInterrupt:
+            print("\n🛑 Program interrupted by user (Ctrl+C).")
+        finally:
+            self.shutdown()
+
+    def shutdown(self):
+        """Releases camera and terminates background threads cleanly."""
+        print("Cleaning up resources...")
+        self.is_running = False
+        self.io.release()
+
+        # Stop face and OCR queues
+        try:
+            self.face_task_queue.put((None, 0.0))
+            self.ocr_task_queue.put((None, 0.0))
+        except Exception:
+            pass
+
+        # Stop audio arbitrator TTS thread
+        self.arbitrator.stop()
+
+        if not self.headless:
+            cv2.destroyAllWindows()
+
+        print("✅ Assistive Smart Goggles shutdown cleanly.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Assistive Smart Goggles AI — Live Local Hardware Runner")
+    parser.add_argument("--camera", type=int, default=0, help="Webcam device index (default: 0)")
+    parser.add_argument("--headless", action="store_true", help="Run without cv2.imshow GUI window")
+    parser.add_argument("--test", action="store_true", help="Run automated test check with synthetic triggers")
+    parser.add_argument("--frames", type=int, default=None, help="Maximum frames to run before auto-exiting")
+    args = parser.parse_args()
+
+    app = LiveLocalGogglesApp(
+        camera_idx=args.camera,
+        headless=args.headless,
+        test_mode=args.test
+    )
+    app.run(max_frames=args.frames)
+
+
+if __name__ == "__main__":
+    main()
