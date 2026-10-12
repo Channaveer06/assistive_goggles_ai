@@ -7,7 +7,7 @@
 [![Depth Anything V2](https://img.shields.io/badge/Metric%20Depth-Depth%20Anything%20V2-orange.svg)](https://github.com/DepthAnything/Depth-Anything-V2)
 [![InsightFace](https://img.shields.io/badge/Face%20ID-InsightFace%20ArcFace-red.svg)](https://github.com/deepinsight/insightface)
 [![ChromaDB](https://img.shields.io/badge/Vector%20Store-ChromaDB-purple.svg)](https://www.trychroma.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 ---
 
@@ -165,4 +165,4 @@ assistive_goggles_ai/
 ---
 
 ## 📜 License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the GNU General Public License v3.0 (GPLv3). See [`LICENSE`](LICENSE) for more information.
