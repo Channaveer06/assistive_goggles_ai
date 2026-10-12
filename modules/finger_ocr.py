@@ -28,7 +28,7 @@ class FingerOCRAndUtilities:
         }
         self.medicine_keywords = ["mg", "ml", "tablet", "capsule", "paracetamol", "amoxicillin", "exp", "dosage", "daily"]
 
-    def check_room_light_and_color(self, frame_bgr, timestamp=0.0):
+    def check_room_light_and_color(self, frame_bgr, timestamp=0.0, priority=0):
         """Answers 'Is the room light on?' and identifies the dominant color in the center of the camera."""
         h, w = frame_bgr.shape[:2]
         gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
@@ -67,10 +67,10 @@ class FingerOCRAndUtilities:
             color_name = "purple or pink"
 
         report = f"{light_status}. Center object color is {color_name}."
-        self.arbitrator.emit_alert(3, report, timestamp, key="light_color")
+        self.arbitrator.emit_alert(priority, report, timestamp, key="light_color")
         return report
 
-    def read_scene_or_fingertip(self, frame_bgr, fingertip_xy=None, timestamp=0.0):
+    def read_scene_or_fingertip(self, frame_bgr, fingertip_xy=None, timestamp=0.0, priority=0):
         """
         Crops region above pointing fingertip (if provided) or full frame,
         applies VizWiz quality check, reads text, and classifies Currency or Medicine.
@@ -140,5 +140,5 @@ class FingerOCRAndUtilities:
 
         framing_tip = " (Note: text near right edge may be cut off)" if edge_cutoff_warning else ""
         spoken_output = f"{prefix}Reading text: {full_text}{framing_tip}"
-        self.arbitrator.emit_alert(2, spoken_output, timestamp, key="ocr_read")
+        self.arbitrator.emit_alert(priority, spoken_output, timestamp, key="ocr_read")
         return annotated, spoken_output

@@ -1,35 +1,35 @@
 import time
 import queue
 import threading
+import subprocess
 import config
 
 try:
-    from gtts import gTTS
+    from gTTS import gTTS
 except ImportError:
-    gTTS = None
+    try:
+        from gtts import gTTS
+    except ImportError:
+        gTTS = None
 
 try:
     from IPython.display import Audio, display
 except ImportError:
     Audio, display = None, None
 
-try:
-    import pyttsx3
-except ImportError:
-    pyttsx3 = None
-
 class PriorityAudioArbitrator:
     """
     ISANA & OSSG-inspired Priority Audio Queue with Track-ID Cooldown Memory.
+    Priority 0: User Direct Hotkey Request (Navigation / OCR / Item / Light / Face / SOS) -> Immediate Preemption
     Priority 1: Critical Collision Hazard (<1.2m) -> Immediate Override
-    Priority 2: Navigation & Approaching Obstacle (<2.5m)
-    Priority 3: Social / Environmental Coaching (Lighting, Blur, Scene Info)
+    Priority 2: Approaching Obstacle (<2.5m)
+    Priority 3: Environmental Coaching (Lighting, Blur)
     """
     def __init__(self):
         self.track_memory = {}       # {track_id: last_announced_timestamp}
         self.general_cooldown = {}   # {message_type: last_announced_timestamp}
         self.spoken_log = []         # History log for Colab/Local benchmarking
-        self.speech_queue = queue.PriorityQueue()
+        self.speech_queue = queue.PriorityQueue(maxsize=2)
         self._msg_counter = 0
         self._stop_event = threading.Event()
         self._tts_thread = None
@@ -38,39 +38,74 @@ class PriorityAudioArbitrator:
             self._start_speech_worker()
 
     def _start_speech_worker(self):
-        """Starts a dedicated non-blocking background daemon thread for offline pyttsx3 voice."""
+        """Starts a dedicated non-blocking background daemon thread for offline SAPI5/PowerShell voice."""
         if self._tts_thread is not None and self._tts_thread.is_alive():
             return
         self._tts_thread = threading.Thread(target=self._speech_worker_loop, daemon=True)
         self._tts_thread.start()
 
     def _speech_worker_loop(self):
-        """Dedicated background thread worker executing offline zero-lag TTS."""
-        engine = None
-        if pyttsx3 is not None:
-            try:
-                engine = pyttsx3.init()
-                engine.setProperty("rate", 175)  # Responsive, natural speech speed
-                engine.setProperty("volume", 1.0)
-            except Exception as e:
-                print(f"⚠️ Warning: Could not initialize pyttsx3 engine: {e}")
-                engine = None
+        """Dedicated background thread worker executing offline zero-lag TTS via native SAPI.SpVoice."""
+        speaker = None
+        use_com = False
+
+        try:
+            import pythoncom
+            import win32com.client
+            pythoncom.CoInitialize()
+            speaker = win32com.client.Dispatch("SAPI.SpVoice")
+            speaker.Rate = 2  # Natural, responsive speech rate
+            speaker.Volume = 100
+            use_com = True
+        except Exception as e:
+            print(f"⚠️ SAPI.SpVoice COM initialization warning: {e}. Falling back to PowerShell TTS.")
+            speaker = None
 
         while not self._stop_event.is_set():
             try:
-                item = self.speech_queue.get(timeout=0.4)
+                item = self.speech_queue.get(timeout=0.25)
             except queue.Empty:
                 continue
 
             priority, _, message = item
-            if engine is not None:
+            if not message:
+                self.speech_queue.task_done()
+                continue
+
+            spoken = False
+            if use_com and speaker is not None:
                 try:
-                    engine.say(message)
-                    engine.runAndWait()
+                    # SVSFDefault = 0 (synchronous speak inside background worker thread)
+                    speaker.Speak(message, 0)
+                    spoken = True
                 except Exception as e:
-                    print(f"TTS Speech error: {e}")
+                    print(f"⚠️ SAPI Speak error: {e}")
+
+            if not spoken:
+                try:
+                    clean_msg = message.replace("'", "''").replace('"', '`"')
+                    ps_cmd = (
+                        f"Add-Type -AssemblyName System.Speech; "
+                        f"$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+                        f"$synth.Rate = 2; $synth.Speak('{clean_msg}')"
+                    )
+                    subprocess.run(
+                        ["powershell", "-NoProfile", "-Command", ps_cmd],
+                        check=False,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                except Exception as e:
+                    print(f"⚠️ PowerShell speech synthesis error: {e}")
 
             self.speech_queue.task_done()
+
+        if use_com:
+            try:
+                import pythoncom
+                pythoncom.CoUninitialize()
+            except Exception:
+                pass
 
     def get_spatial_direction(self, x_center_ratio):
         """Maps horizontal bounding box center (0.0 to 1.0) to human clock/ear directions."""
@@ -94,25 +129,41 @@ class PriorityAudioArbitrator:
         return False
 
     def emit_alert(self, priority, message, current_time, key="general"):
-        """Queues and synthesizes speech without flooding user ears or blocking 30 FPS camera loop."""
-        if key in self.general_cooldown and (current_time - self.general_cooldown[key]) < 5.0:
-            return None
-        self.general_cooldown[key] = current_time
-        log_entry = f"[{current_time:05.2f}s | P{priority}] 🔊 \"{message}\""
+        """Queues and synthesizes speech with immediate hotkey preemption & small queue buffer."""
+        # Only enforce cooldown on priority >= 2 (environmental/obstacle coaching)
+        if priority >= 2:
+            if key in self.general_cooldown and (current_time - self.general_cooldown[key]) < 4.0:
+                return None
+            self.general_cooldown[key] = current_time
+
+        log_entry = f"[{current_time:05.2f}s | P{priority}] [AUDIO] \"{message}\""
         self.spoken_log.append((current_time, priority, message))
-        print(log_entry)
+        try:
+            print(log_entry)
+        except UnicodeEncodeError:
+            print(log_entry.encode("ascii", errors="replace").decode("ascii"))
 
         if config.ENV_MODE == "LOCAL":
             if self._tts_thread is None or not self._tts_thread.is_alive():
                 self._start_speech_worker()
 
-            # Priority 1 Critical Hazard immediate override: clear pending queue
-            if priority == 1:
+            self._msg_counter += 1
+
+            # Priority 0 (User Hotkey) & Priority 1 (Hazard Stop): Preempt all pending queued speech
+            if priority <= 1:
                 with self.speech_queue.mutex:
                     self.speech_queue.queue.clear()
-
-            self._msg_counter += 1
-            self.speech_queue.put((priority, self._msg_counter, message))
+                try:
+                    self.speech_queue.put_nowait((priority, self._msg_counter, message))
+                except queue.Full:
+                    pass
+            else:
+                # For obstacle/coaching alerts, drop stale alerts if queue is already full
+                try:
+                    self.speech_queue.put_nowait((priority, self._msg_counter, message))
+                except queue.Full:
+                    # Queue full -> discard stale obstacle alert
+                    pass
 
         return message
 
@@ -126,3 +177,4 @@ class PriorityAudioArbitrator:
     def stop(self):
         """Signals the background TTS thread to stop."""
         self._stop_event.set()
+

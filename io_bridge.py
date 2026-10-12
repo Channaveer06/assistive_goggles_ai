@@ -35,7 +35,7 @@ class HardwareIOBridge:
             f"Emergency Guardian SOS activated. Sharing live camera stream and current location "
             f"({current_room.replace('_', ' ')}) with your registered guardian."
         )
-        self.arbitrator.emit_alert(1, msg, timestamp, key="sos_alert")
+        self.arbitrator.emit_alert(0, msg, timestamp, key="sos_alert")
         return msg
 
     def release(self):

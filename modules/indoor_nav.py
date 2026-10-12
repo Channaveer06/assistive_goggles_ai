@@ -116,7 +116,7 @@ class IndoorTopologicalNavigator:
         simplified.append(node_path[-1])
         return simplified
 
-    def plan_voice_route(self, start_node, target_node, timestamp=0.0):
+    def plan_voice_route(self, start_node, target_node, timestamp=0.0, priority=0):
         """Computes A* path, simplifies collinear segments, and generates human turn-by-turn audio instructions."""
         start_key = start_node.lower().strip().replace(" ", "_")
         target_key = target_node.lower().strip().replace(" ", "_")
@@ -162,5 +162,5 @@ class IndoorTopologicalNavigator:
         door_label = self.graph.nodes[target_key].get("door_sign", target_key.upper())
         steps_speech.append(f"Look for the {door_label} door sign straight ahead.")
         full_guidance = f"Route from {start_node.replace('_', ' ')} to {target_node.replace('_', ' ')}: " + ". Then, ".join(steps_speech)
-        self.arbitrator.emit_alert(2, full_guidance, timestamp, key=f"nav_{target_key}")
+        self.arbitrator.emit_alert(priority, full_guidance, timestamp, key=f"nav_{target_key}")
         return straight_path, full_guidance

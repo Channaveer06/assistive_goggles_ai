@@ -6,8 +6,8 @@ Runs the complete assistive vision & spatial audio pipeline locally on laptop ha
 2. Continuous ReflexDepthEngine (YOLOv11 + Metric Depth Indoors in meters).
 3. Continuous EpisodicObjectMemory (records personal items near room landmarks).
 4. Asynchronous FaceAndSocialEngine every 10 frames (InsightFace 512-D + YOLOv11-Pose cues).
-5. Non-blocking pyttsx3 offline audio arbitration.
-6. Live keyboard hotkeys & triggers:
+5. Non-blocking SAPI.SpVoice / PowerShell zero-lag offline audio arbitration.
+6. Live keyboard hotkeys & triggers (working from BOTH Terminal and OpenCV Window):
    [e] Enroll live face in front of webcam into ChromaDB
    [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)
    [f] Find where I last left my cell phone or bottle
@@ -20,9 +20,19 @@ Runs the complete assistive vision & spatial audio pipeline locally on laptop ha
 import os
 import sys
 import time
+import warnings
 import argparse
 import threading
 import queue
+
+# Silence InsightFace numpy lstsq FutureWarning
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
+
 import cv2
 import numpy as np
 
@@ -46,12 +56,13 @@ class LiveLocalGogglesApp:
         self.test_mode = test_mode
         self.current_room = "study_room"
         self.is_running = False
+        self.window_name = "Assistive Smart Goggles AI — Live HUD"
 
         print("=" * 65)
         print("👓 BOOTING ASSISTIVE SMART GOGGLES AI — LOCAL HARDWARE ENGINE")
         print("=" * 65)
 
-        # 1. Initialize Arbitrator with offline non-blocking pyttsx3
+        # 1. Initialize Arbitrator with offline non-blocking SAPI.SpVoice / pyttsx3
         self.arbitrator = PriorityAudioArbitrator()
 
         # 2. Initialize IO Bridge
@@ -91,7 +102,7 @@ class LiveLocalGogglesApp:
 
         print("\n" + "=" * 65)
         print("✅ ALL SYSTEMS ONLINE — ZERO-LAG ASSISTIVE GOGGLES READY")
-        print("   HOTKEYS:")
+        print("   HOTKEYS (Work in Terminal & HUD Window):")
         print("   [e] Enroll live face into ChromaDB")
         print("   [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)")
         print("   [f] Find where I last left my cell phone or bottle")
@@ -125,7 +136,7 @@ class LiveLocalGogglesApp:
                 if frame_bgr is None:
                     break
 
-                _, speech = self.ocr.read_scene_or_fingertip(frame_bgr, timestamp=timestamp)
+                _, speech = self.ocr.read_scene_or_fingertip(frame_bgr, timestamp=timestamp, priority=0)
                 self._update_hud_status(speech)
                 self.ocr_task_queue.task_done()
             except Exception as e:
@@ -136,21 +147,21 @@ class LiveLocalGogglesApp:
         self.last_hud_message_time = time.time()
 
     def handle_hotkey(self, key_char, current_frame, timestamp):
-        """Dispatches keyboard controls to the respective assistive modules."""
-        key_char = key_char.lower()
+        """Dispatches keyboard controls with Priority 0 immediate preemption."""
+        key_char = key_char.lower().strip()
 
         if key_char == 'e':
             # [e] Enroll live face in front of webcam into ChromaDB
             print("📸 [ACTION] Live Face Enrollment Triggered...")
-            self.arbitrator.emit_alert(2, "Capturing face for enrollment. Please look directly at the camera.", timestamp, key="enroll_hint")
+            self.arbitrator.emit_alert(0, "Capturing face for enrollment. Please look directly at the camera.", timestamp, key="enroll_hint")
             success, msg = self.social.enroll_known_person(current_frame, person_name="User")
-            self.arbitrator.emit_alert(2, msg, timestamp, key="enroll_result")
+            self.arbitrator.emit_alert(0, msg, timestamp, key="enroll_result")
             self._update_hud_status(msg)
 
         elif key_char == 'r':
             # [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)
             print("📖 [ACTION] Fingertip / Scene OCR Triggered...")
-            self.arbitrator.emit_alert(2, "Reading scene text...", timestamp, key="ocr_start")
+            self.arbitrator.emit_alert(0, "Reading scene text...", timestamp, key="ocr_start")
             if self.ocr_task_queue.empty():
                 self.ocr_task_queue.put((current_frame.copy(), timestamp))
             self._update_hud_status("Analyzing text, currency & medicine labels...")
@@ -161,7 +172,6 @@ class LiveLocalGogglesApp:
             phone_res = self.memory.query_item("cell phone")
             bottle_res = self.memory.query_item("bottle")
 
-            # Prioritize whichever item has been seen
             if "not seen" not in phone_res:
                 ans = phone_res
             elif "not seen" not in bottle_res:
@@ -169,19 +179,19 @@ class LiveLocalGogglesApp:
             else:
                 ans = "I have not seen your cell phone or bottle recently in this room."
 
-            self.arbitrator.emit_alert(2, ans, timestamp, key="find_item")
+            self.arbitrator.emit_alert(0, ans, timestamp, key="find_item")
             self._update_hud_status(ans)
 
         elif key_char == 'b':
             # [b] Speak turn-by-turn Indoor Navigation route to the bathroom
             print("🧭 [ACTION] Indoor Navigation Route to Bathroom Triggered...")
-            _, speech = self.navigator.plan_voice_route(self.current_room, "bathroom", timestamp=timestamp)
+            _, speech = self.navigator.plan_voice_route(self.current_room, "bathroom", timestamp=timestamp, priority=0)
             self._update_hud_status(speech)
 
         elif key_char == 'l':
             # [l] Check Room Light & Center Object Color
             print("💡 [ACTION] Room Light & Center Object Color Check Triggered...")
-            report = self.ocr.check_room_light_and_color(current_frame, timestamp=timestamp)
+            report = self.ocr.check_room_light_and_color(current_frame, timestamp=timestamp, priority=0)
             self._update_hud_status(report)
 
         elif key_char == 's':
@@ -223,7 +233,6 @@ class LiveLocalGogglesApp:
         if not opened or self.io.cap is None or not self.io.cap.isOpened():
             print("⚠️ Hardware webcam could not be opened. Using test mock scene for execution.")
             mock_source = True
-            # Load fallback test scene
             base_dir = os.path.dirname(os.path.abspath(__file__))
             test_img_path = os.path.join(base_dir, "test_scene.jpg")
             if os.path.exists(test_img_path):
@@ -231,6 +240,14 @@ class LiveLocalGogglesApp:
                 mock_frame = cv2.resize(mock_frame, (640, 480))
             else:
                 mock_frame = np.full((480, 640, 3), 120, dtype=np.uint8)
+
+        # Initialize and bring OpenCV HUD window to the front
+        if not self.headless:
+            cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+            try:
+                cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1)
+            except Exception:
+                pass
 
         frame_count = 0
         start_time = time.time()
@@ -248,7 +265,6 @@ class LiveLocalGogglesApp:
                 # 1. Grab Frame (Webcam or Mock Frame)
                 if mock_source:
                     frame = mock_frame.copy()
-                    # Add subtle artificial motion for tracking
                     shift_x = int(5 * np.sin(frame_count * 0.1))
                     frame = np.roll(frame, shift_x, axis=1)
                 else:
@@ -282,16 +298,31 @@ class LiveLocalGogglesApp:
                 # 5. Composite Final Live HUD
                 hud_display = self.draw_hud_overlays(combined_hud, current_fps, frame_count)
 
-                # 6. Display HUD Window (if not headless)
+                # 6. Check for Hotkey Input (from BOTH Terminal and OpenCV Window)
+                key_char = None
+
+                # (a) Check Windows Console Input via msvcrt (non-blocking)
+                if msvcrt is not None:
+                    while msvcrt.kbhit():
+                        raw_ch = msvcrt.getch()
+                        try:
+                            key_char = raw_ch.decode("utf-8", errors="ignore").lower()
+                        except Exception:
+                            key_char = None
+
+                # (b) Check OpenCV Window Input (if not headless)
                 if not self.headless:
-                    cv2.imshow("Assistive Smart Goggles AI — Live HUD", hud_display)
-                    key = cv2.waitKey(1) & 0xFF
-                    if key != 255:
-                        char = chr(key)
-                        if char == 'q':
-                            print("🛑 User initiated clean quit via [q] key.")
-                            break
-                        self.handle_hotkey(char, frame, now)
+                    cv2.imshow(self.window_name, hud_display)
+                    cv_key = cv2.waitKey(1) & 0xFF
+                    if cv_key != 255:
+                        key_char = chr(cv_key).lower()
+
+                # (c) Dispatch hotkey
+                if key_char:
+                    if key_char == 'q':
+                        print("🛑 User initiated clean quit via [q] key.")
+                        break
+                    self.handle_hotkey(key_char, frame, now)
 
                 # Test mode auto-triggers for verification
                 if self.test_mode and frame_count in [5, 10, 15, 20, 25, 30]:
