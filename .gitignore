@@ -32,6 +32,8 @@ wheels/
 # Audio dumps & runtime temporary files
 *.mp3
 *.wav
+*.webm
+temp_guardian_voice.*
 *.tmp
 *.log
 

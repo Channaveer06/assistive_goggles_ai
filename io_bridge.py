@@ -21,7 +21,7 @@ class HardwareIOBridge:
             from modules.webrtc_guardian import WebRTCGuardianServer
             self.guardian_server = WebRTCGuardianServer(self.arbitrator, io_bridge=self)
         except Exception as e:
-            print(f"ℹ️ WebRTC Guardian server module info: {e}")
+            print(f"[INFO] WebRTC Guardian server module info: {e}")
 
     def set_guardian_server(self, server):
         """Allows injecting an existing WebRTC guardian server instance."""
@@ -63,10 +63,24 @@ class HardwareIOBridge:
 
         return msg
 
-    def notify_guardian(self, room_name, public_url):
+    def trigger_call_guardian(self, current_room="unknown_location", timestamp=0.0):
         """
-        Sends an automated SOS webhook dispatch to the registered guardian with live stream URL.
-        Non-blocking with short timeout (timeout=3) to prevent freezing or lagging.
+        Two-Way Voice Intercom Trigger: Calls guardian, announces through arbitrator,
+        and launches live stream + intercom portal.
+        """
+        self.sos_active = True
+        msg = "Calling registered guardian. Opening live audio and video stream."
+        self.arbitrator.emit_alert(0, msg, timestamp, key="call_guardian")
+
+        if self.guardian_server is not None:
+            self.guardian_server.start_stream(current_room=current_room, timestamp=timestamp, call_request=True)
+
+        return msg
+
+    def notify_guardian(self, room_name, public_url, call_request=False):
+        """
+        Sends an automated SOS or Voice Call webhook dispatch to the registered guardian with live stream URL.
+        Non-blocking with short timeout (timeout=5) to prevent freezing or lagging.
         """
         webhook_url = getattr(config, "GUARDIAN_WEBHOOK_URL", "").strip()
         phone = getattr(config, "GUARDIAN_PHONE", "").strip()
@@ -82,10 +96,16 @@ class HardwareIOBridge:
             import requests
 
             formatted_room = str(room_name).replace("_", " ")
-            sos_text = (
-                f"🚨 Emergency SOS: Channaveer needs assistance in the {formatted_room}.\n"
-                f"📹 Live Camera Stream: {public_url}"
-            )
+            if call_request:
+                sos_text = (
+                    f"📞 Incoming Call Request: Channaveer is requesting live voice assistance in the {formatted_room}.\n"
+                    f"📹 Click to answer and view stream:\n{public_url}"
+                )
+            else:
+                sos_text = (
+                    f"🚨 Emergency SOS: Channaveer needs assistance in the {formatted_room}.\n"
+                    f"📹 Live Camera Stream: {public_url}"
+                )
 
             # Detect if it's a Telegram Bot API URL
             if "api.telegram.org" in webhook_url:

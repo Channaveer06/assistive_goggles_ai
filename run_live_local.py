@@ -17,6 +17,7 @@ Runs the complete assistive vision & spatial audio pipeline locally on laptop ha
    [b] Speak turn-by-turn Indoor Navigation route to the bathroom
    [l] Check Room Light & Center Object Color
    [s] Trigger Guardian SOS
+   [c] Call Guardian Two-Way Intercom (Voice Walkie-Talkie)
    [q] Quit cleanly
 """
 
@@ -124,9 +125,10 @@ class LiveLocalGogglesApp:
         print("   [b] Turn-by-turn Navigation route to the bathroom")
         print("   [l] Check Room Light & Center Object Color")
         print("   [s] Trigger Guardian Emergency SOS")
+        print("   [c] Call Guardian Two-Way Intercom (Voice Walkie-Talkie)")
         print("   [q] Quit cleanly")
         if self.mic_active:
-            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'bathroom', 'find', 'read', 'light', 'sos'")
+            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'call guardian', 'sos', 'bathroom', 'find', 'read', 'light'")
         print("=" * 65 + "\n")
 
     def _start_voice_listener(self):
@@ -158,7 +160,9 @@ class LiveLocalGogglesApp:
                 text = recognizer.recognize_google(audio).lower().strip()
                 print(f"🗣️ [VOICE DETECTED]: \"{text}\"")
 
-                if any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
+                if any(phrase in text for phrase in ["call guardian", "call channaveer", "call for help", "voice call"]):
+                    self.voice_command_queue.put('c')
+                elif any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
                     self.voice_command_queue.put('b')
                 elif any(w in text for w in ["find", "where is", "phone", "bottle", "item"]):
                     self.voice_command_queue.put('f')
@@ -306,6 +310,12 @@ class LiveLocalGogglesApp:
             msg = self.io.trigger_guardian_sos(self.current_room, timestamp=timestamp)
             self._update_hud_status(msg)
 
+        elif key_char == 'c':
+            # [c] Call Guardian Two-Way Voice Intercom
+            print("📞 [ACTION] Call Guardian Voice Request Triggered...")
+            msg = self.io.trigger_call_guardian(self.current_room, timestamp=timestamp)
+            self._update_hud_status(msg)
+
     def draw_hud_overlays(self, combined_hud, fps, frame_count):
         """Draws a high-visibility, accessible HUD overlay banner on the video stream."""
         h, w = combined_hud.shape[:2]
@@ -313,13 +323,13 @@ class LiveLocalGogglesApp:
         # Top banner for telemetry & room info
         top_bar = np.zeros((46, w, 3), dtype=np.uint8)
         mic_status = "MIC: ON" if self.mic_active else "MIC: OFF"
-        sos_status = " | 🚨 SOS: LIVE STREAMING" if (getattr(self, "guardian", None) and self.guardian.is_running) else ""
+        sos_status = " | 🚨 SOS / CALL STREAMING" if (getattr(self, "guardian", None) and self.guardian.is_running) else ""
         title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}"
         cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2, cv2.LINE_AA)
 
         # Bottom banner for hotkeys and recent speech
         bottom_bar = np.zeros((64, w, 3), dtype=np.uint8)
-        hotkeys_text = "[e] Enroll  [r] OCR/Medicine  [f] Find Item  [b] Bathroom Nav  [l] Light/Color  [s] SOS  [q] Quit"
+        hotkeys_text = "[e] Enroll  [r] OCR/Medicine  [f] Find  [b] Nav  [l] Light  [s] SOS  [c] Call  [q] Quit"
         cv2.putText(bottom_bar, hotkeys_text, (16, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (180, 180, 180), 1, cv2.LINE_AA)
 
         # Display latest spoken message
@@ -442,8 +452,8 @@ class LiveLocalGogglesApp:
                     self.handle_hotkey(key_char, frame, now)
 
                 # Test mode auto-triggers for verification
-                if self.test_mode and frame_count in [5, 10, 15, 20, 25, 30]:
-                    test_keys = {5: 'f', 10: 'b', 15: 'l', 20: 's', 25: 'r', 30: 'e'}
+                if self.test_mode and frame_count in [5, 10, 15, 20, 25, 30, 32]:
+                    test_keys = {5: 'f', 10: 'b', 15: 'l', 20: 's', 25: 'r', 30: 'e', 32: 'c'}
                     k = test_keys[frame_count]
                     print(f"\n🧪 [TEST VERIFICATION] Auto-triggering key [{k}] at frame {frame_count}...")
                     self.handle_hotkey(k, frame, now)

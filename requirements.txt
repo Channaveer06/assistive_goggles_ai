@@ -16,3 +16,4 @@ aiohttp
 pyngrok
 av
 requests
+sounddevice
