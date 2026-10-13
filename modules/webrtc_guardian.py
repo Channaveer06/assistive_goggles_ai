@@ -222,16 +222,13 @@ INDEX_HTML = """<!DOCTYPE html>
 
     <main class="main-card">
         <div class="video-container">
-            <div id="overlayStatus" class="overlay-status">
-                <span>🔄 Connecting to goggles WebRTC feed...</span>
-            </div>
-            <video id="video" autoplay playsinline muted controls style="width: 100%; border-radius: 8px;"></video>
+            <img id="video" src="/mjpeg" style="width: 100%; border-radius: 8px; object-fit: cover; min-height: 250px; background: #000;" />
         </div>
         <div class="info-bar">
             <div class="meta-group">
                 <div class="meta-item">
                     <span class="meta-label">Protocol</span>
-                    <span class="meta-value">WebRTC Low Latency (&lt;100ms)</span>
+                    <span class="meta-value">MJPEG Stream (5G Firewall Safe)</span>
                 </div>
                 <div class="meta-item">
                     <span class="meta-label">Stream Feed</span>
@@ -239,10 +236,10 @@ INDEX_HTML = """<!DOCTYPE html>
                 </div>
                 <div class="meta-item">
                     <span class="meta-label">Status</span>
-                    <span id="connStatus" class="meta-value" style="color: #fbbf24;">Negotiating</span>
+                    <span id="connStatus" class="meta-value" style="color: #4ade80;">Live Streaming</span>
                 </div>
             </div>
-            <button id="btnReconnect" class="btn-reconnect" onclick="startStream()">Reconnect Stream</button>
+            <button id="btnReconnect" class="btn-reconnect" onclick="reloadStream()">Reload Stream</button>
         </div>
     </main>
 
@@ -252,106 +249,12 @@ INDEX_HTML = """<!DOCTYPE html>
     </section>
 
     <script>
-        let pc = null;
-
-        async function startStream() {
-            const overlay = document.getElementById('overlayStatus');
-            const statusEl = document.getElementById('connStatus');
-            const videoEl = document.getElementById('video') || document.getElementById('remoteVideo');
-
-            overlay.innerHTML = '<span>🔄 Negotiating WebRTC peer connection...</span>';
-            statusEl.innerText = 'Connecting...';
-            statusEl.style.color = '#fbbf24';
-
-            if (pc) {
-                try {
-                    pc.close();
-                } catch (e) {}
-            }
-
-            const config = {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-                    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
-                ]
-            };
-            pc = new RTCPeerConnection(config);
-
-            pc.addEventListener('track', (evt) => {
-                if (evt.track.kind === 'video') {
-                    videoEl.srcObject = evt.streams[0];
-                    videoEl.play().catch(e => console.log('Autoplay hint:', e));
-                    overlay.innerHTML = '<span>🟢 LIVE ZERO-LAG POV FEED</span>';
-                    overlay.style.color = '#4ade80';
-                    statusEl.innerText = 'Live Streaming';
-                    statusEl.style.color = '#4ade80';
-                }
-            });
-
-            pc.addEventListener('connectionstatechange', () => {
-                if (pc.connectionState === 'connected') {
-                    statusEl.innerText = 'Connected';
-                    statusEl.style.color = '#4ade80';
-                } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-                    statusEl.innerText = 'Disconnected';
-                    statusEl.style.color = '#f87171';
-                    overlay.innerHTML = '<span>⚠️ Connection lost. Click Reconnect.</span>';
-                }
-            });
-
-            pc.addTransceiver('video', { direction: 'recvonly' });
-
-            try {
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-
-                // Wait for local ICE gathering to complete before posting offer
-                await new Promise((resolve) => {
-                    if (pc.iceGatheringState === 'complete') {
-                        resolve();
-                    } else {
-                        function check() {
-                            if (pc.iceGatheringState === 'complete') {
-                                pc.removeEventListener('icegatheringstatechange', check);
-                                resolve();
-                            }
-                        }
-                        pc.addEventListener('icegatheringstatechange', check);
-                        setTimeout(resolve, 1500); // 1.5s timeout fallback
-                    }
-                });
-
-                const response = await fetch('/offer', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({
-                        sdp: pc.localDescription.sdp,
-                        type: pc.localDescription.type
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Server rejected SDP offer: ' + response.statusText);
-                }
-
-                const answer = await response.json();
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-            } catch (err) {
-                console.error('WebRTC error:', err);
-                overlay.innerHTML = '<span>❌ Stream Error: ' + err.message + '</span>';
-                overlay.style.color = '#f87171';
-                statusEl.innerText = 'Error';
-                statusEl.style.color = '#f87171';
+        function reloadStream() {
+            const img = document.getElementById('video');
+            if (img) {
+                img.src = '/mjpeg?t=' + new Date().getTime();
             }
         }
-
-        window.addEventListener('load', () => {
-            startStream();
-        });
     </script>
 </body>
 </html>
@@ -546,9 +449,11 @@ class WebRTCGuardianServer:
                 _safe_print("   TIP: To enable public mobile streaming, run: ngrok config add-authtoken <TOKEN>")
 
     async def _start_aiohttp_server(self):
-        """Creates the aiohttp application with HTML & WebRTC endpoints."""
+        """Creates the aiohttp application with HTML, MJPEG, and status endpoints."""
         app = web.Application()
+        self.app = app
         app.router.add_get("/", self._handle_index)
+        app.router.add_get("/mjpeg", self._handle_mjpeg)
         app.router.add_post("/offer", self._handle_offer)
         app.router.add_get("/status", self._handle_status)
 
@@ -556,6 +461,45 @@ class WebRTCGuardianServer:
         await self.runner.setup()
         site = web.TCPSite(self.runner, "0.0.0.0", self.port)
         await site.start()
+
+    async def _handle_mjpeg(self, request):
+        """
+        Streams live frames as Motion JPEG (MJPEG) over standard HTTP multipart.
+        Bypasses strict 5G / CGNAT mobile firewalls that block WebRTC UDP traffic.
+        """
+        response = web.StreamResponse(
+            status=200,
+            reason="OK",
+            headers={
+                "Content-Type": "multipart/x-mixed-replace; boundary=frame",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "ngrok-skip-browser-warning": "true"
+            }
+        )
+        await response.prepare(request)
+
+        try:
+            while True:
+                frame = self.get_latest_frame()
+                if frame is None:
+                    await asyncio.sleep(0.03)
+                    continue
+
+                ret, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                if not ret:
+                    await asyncio.sleep(0.03)
+                    continue
+
+                await response.write(
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+                )
+                await asyncio.sleep(0.03)
+        except Exception:
+            pass
+
+        return response
 
     async def _handle_index(self, request):
         return web.Response(
