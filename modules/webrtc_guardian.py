@@ -9,7 +9,7 @@ import numpy as np
 import cv2
 
 from aiohttp import web
-from aiortc import VideoStreamTrack, RTCPeerConnection, RTCSessionDescription
+from aiortc import VideoStreamTrack, RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer
 from av import VideoFrame
 
 try:
@@ -225,7 +225,7 @@ INDEX_HTML = """<!DOCTYPE html>
             <div id="overlayStatus" class="overlay-status">
                 <span>🔄 Connecting to goggles WebRTC feed...</span>
             </div>
-            <video id="remoteVideo" autoplay playsinline controls muted></video>
+            <video id="video" autoplay playsinline muted controls style="width: 100%; border-radius: 8px;"></video>
         </div>
         <div class="info-bar">
             <div class="meta-group">
@@ -257,7 +257,7 @@ INDEX_HTML = """<!DOCTYPE html>
         async function startStream() {
             const overlay = document.getElementById('overlayStatus');
             const statusEl = document.getElementById('connStatus');
-            const videoEl = document.getElementById('remoteVideo');
+            const videoEl = document.getElementById('video') || document.getElementById('remoteVideo');
 
             overlay.innerHTML = '<span>🔄 Negotiating WebRTC peer connection...</span>';
             statusEl.innerText = 'Connecting...';
@@ -269,16 +269,19 @@ INDEX_HTML = """<!DOCTYPE html>
                 } catch (e) {}
             }
 
-            pc = new RTCPeerConnection({
+            const config = {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
+                    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
                 ]
-            });
+            };
+            pc = new RTCPeerConnection(config);
 
             pc.addEventListener('track', (evt) => {
                 if (evt.track.kind === 'video') {
                     videoEl.srcObject = evt.streams[0];
+                    videoEl.play().catch(e => console.log('Autoplay hint:', e));
                     overlay.innerHTML = '<span>🟢 LIVE ZERO-LAG POV FEED</span>';
                     overlay.style.color = '#4ade80';
                     statusEl.innerText = 'Live Streaming';
@@ -315,13 +318,16 @@ INDEX_HTML = """<!DOCTYPE html>
                             }
                         }
                         pc.addEventListener('icegatheringstatechange', check);
-                        setTimeout(resolve, 1200); // 1.2s timeout fallback
+                        setTimeout(resolve, 1500); // 1.5s timeout fallback
                     }
                 });
 
                 const response = await fetch('/offer', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
                     body: JSON.stringify({
                         sdp: pc.localDescription.sdp,
                         type: pc.localDescription.type
@@ -552,7 +558,11 @@ class WebRTCGuardianServer:
         await site.start()
 
     async def _handle_index(self, request):
-        return web.Response(content_type="text/html", text=INDEX_HTML)
+        return web.Response(
+            content_type="text/html",
+            text=INDEX_HTML,
+            headers={"ngrok-skip-browser-warning": "true"}
+        )
 
     async def _handle_status(self, request):
         return web.json_response({
@@ -562,13 +572,20 @@ class WebRTCGuardianServer:
             "active_connections": len(self.pcs),
             "public_url": self.public_url,
             "local_url": self.local_url
-        })
+        }, headers={"ngrok-skip-browser-warning": "true"})
 
     async def _handle_offer(self, request):
         params = await request.json()
         offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
 
-        pc = RTCPeerConnection()
+        # Configure STUN & TURN servers for 5G cellular / CGNAT traversal
+        ice_servers = [
+            RTCIceServer(urls="stun:stun.l.google.com:19302"),
+            RTCIceServer(urls="turn:openrelay.metered.ca:80", username="openrelayproject", credential="openrelayproject"),
+            RTCIceServer(urls="turn:openrelay.metered.ca:443", username="openrelayproject", credential="openrelayproject"),
+        ]
+        config = RTCConfiguration(iceServers=ice_servers)
+        pc = RTCPeerConnection(configuration=config)
         self.pcs.add(pc)
 
         @pc.on("connectionstatechange")
@@ -585,10 +602,13 @@ class WebRTCGuardianServer:
         answer = await pc.createAnswer()
         await pc.setLocalDescription(answer)
 
-        return web.json_response({
-            "sdp": pc.localDescription.sdp,
-            "type": pc.localDescription.type
-        })
+        return web.json_response(
+            {
+                "sdp": pc.localDescription.sdp,
+                "type": pc.localDescription.type
+            },
+            headers={"ngrok-skip-browser-warning": "true"}
+        )
 
     def _cleanup_loop(self):
         """Cleans up asyncio event loop and active peer connections."""
