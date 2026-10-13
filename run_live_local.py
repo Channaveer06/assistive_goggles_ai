@@ -74,8 +74,9 @@ class LiveLocalGogglesApp:
         # 1. Initialize Arbitrator with offline non-blocking SAPI.SpVoice / pyttsx3
         self.arbitrator = PriorityAudioArbitrator()
 
-        # 2. Initialize IO Bridge
+        # 2. Initialize IO Bridge with WebRTC Guardian Live Stream
         self.io = HardwareIOBridge(self.arbitrator, video_source=camera_idx)
+        self.guardian = self.io.guardian_server
 
         # 3. Initialize Core Vision & Independence Modules
         print("\n[1/5] Loading Face & Social Micro-Cue Engine...")
@@ -312,7 +313,8 @@ class LiveLocalGogglesApp:
         # Top banner for telemetry & room info
         top_bar = np.zeros((46, w, 3), dtype=np.uint8)
         mic_status = "MIC: ON" if self.mic_active else "MIC: OFF"
-        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}"
+        sos_status = " | 🚨 SOS: LIVE STREAMING" if (getattr(self, "guardian", None) and self.guardian.is_running) else ""
+        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}"
         cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2, cv2.LINE_AA)
 
         # Bottom banner for hotkeys and recent speech
@@ -403,6 +405,9 @@ class LiveLocalGogglesApp:
 
                 # 5. Composite Final Live HUD
                 hud_display = self.draw_hud_overlays(combined_hud, current_fps, frame_count)
+
+                # Thread-safely supply live annotated HUD frame to WebRTC Guardian stream
+                self.io.update_stream_frame(hud_display)
 
                 # 6. Check for Hotkey / Voice Input (from Microphone, Terminal, and OpenCV Window)
                 key_char = None
