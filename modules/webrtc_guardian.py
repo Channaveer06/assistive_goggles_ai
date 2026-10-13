@@ -400,8 +400,9 @@ class WebRTCGuardianServer:
     Manages the background aiohttp WebRTC signaling server and pyngrok secure tunnel.
     Operates in a completely detached daemon thread so the main 30 FPS loop is never impacted.
     """
-    def __init__(self, arbitrator, port=8080):
+    def __init__(self, arbitrator, io_bridge=None, port=8080):
         self.arbitrator = arbitrator
+        self.io_bridge = io_bridge or getattr(arbitrator, "io", None)
         self.port = port
         self.latest_frame = None
         self.frame_lock = threading.Lock()
@@ -495,7 +496,14 @@ class WebRTCGuardianServer:
             _safe_print(f"LOCAL NETWORK LINK       : {self.local_url} (http://localhost:{self.port})")
             _safe_print("=" * 70 + "\n")
 
-            # 4. Speak notification via priority audio arbitrator
+            # 4. Automatically dispatch live stream link to guardian via webhook
+            dispatch_url = self.public_url if self.public_url else self.local_url
+            if hasattr(self.arbitrator, "io") and self.arbitrator.io is not None:
+                self.arbitrator.io.notify_guardian(current_room, dispatch_url)
+            elif self.io_bridge is not None:
+                self.io_bridge.notify_guardian(current_room, dispatch_url)
+
+            # 5. Speak notification via priority audio arbitrator
             self.arbitrator.emit_alert(
                 0,
                 "Emergency Guardian SOS active. Secure live stream link generated.",
@@ -503,7 +511,7 @@ class WebRTCGuardianServer:
                 key="sos_link_ready"
             )
 
-            # 5. Keep loop running to handle WebRTC requests
+            # 6. Keep loop running to handle WebRTC requests
             self.loop.run_forever()
         except Exception as e:
             _safe_print(f"WebRTC Guardian server error: {e}")

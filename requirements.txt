@@ -15,3 +15,4 @@ aiortc
 aiohttp
 pyngrok
 av
+requests

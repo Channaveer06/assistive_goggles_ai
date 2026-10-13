@@ -18,3 +18,8 @@ MIN_SHARPNESS_LAPLACIAN = 20.0   # Variance of Laplacian before warning "Camera 
 YOLO_ONNX_PATH = os.path.join(BASE_DIR, "project_data", "models_onnx", "yolo11n.onnx")
 METRIC_DEPTH_MODEL = "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf"
 
+# Guardian Emergency Dispatch & WebRTC SOS Settings
+GUARDIAN_WEBHOOK_URL = ""        # Webhook URL (Discord, Slack, Twilio, Make.com, or custom server)
+GUARDIAN_PHONE = ""              # Guardian Phone Number for SMS/WhatsApp routing
+NGROK_AUTHTOKEN = os.environ.get("NGROK_AUTHTOKEN", "")
+

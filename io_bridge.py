@@ -11,6 +11,7 @@ class HardwareIOBridge:
     """
     def __init__(self, arbitrator, video_source=0):
         self.arbitrator = arbitrator
+        self.arbitrator.io = self
         self.video_source = video_source
         self.cap = None
         self.sos_active = False
@@ -18,7 +19,7 @@ class HardwareIOBridge:
         self.guardian_server = None
         try:
             from modules.webrtc_guardian import WebRTCGuardianServer
-            self.guardian_server = WebRTCGuardianServer(self.arbitrator)
+            self.guardian_server = WebRTCGuardianServer(self.arbitrator, io_bridge=self)
         except Exception as e:
             print(f"ℹ️ WebRTC Guardian server module info: {e}")
 
@@ -62,8 +63,41 @@ class HardwareIOBridge:
 
         return msg
 
+    def notify_guardian(self, room_name, public_url):
+        """
+        Sends an automated SOS webhook dispatch to the registered guardian with live stream URL.
+        Non-blocking with short timeout (timeout=3) to prevent freezing or lagging.
+        """
+        webhook_url = getattr(config, "GUARDIAN_WEBHOOK_URL", "")
+        phone = getattr(config, "GUARDIAN_PHONE", "")
+
+        if not webhook_url:
+            print("[INFO] [WEBHOOK] GUARDIAN_WEBHOOK_URL is not set in config.py. Skipping HTTP POST.")
+            return False
+
+        try:
+            import requests
+
+            formatted_room = str(room_name).replace("_", " ")
+            payload = {
+                "text": f"🚨 Emergency SOS: Channaveer needs assistance in the {formatted_room}. Click here to view live camera feed: {public_url}",
+                "phone": phone
+            }
+
+            resp = requests.post(webhook_url, json=payload, timeout=3)
+            if resp.status_code in [200, 201, 204]:
+                print(f"[SUCCESS] [WEBHOOK] Guardian successfully notified via webhook (Status {resp.status_code}).")
+                return True
+            else:
+                print(f"[WARNING] [WEBHOOK] Guardian webhook returned status code: {resp.status_code}")
+                return False
+        except Exception as e:
+            print(f"[WARNING] [WEBHOOK] Failed to dispatch guardian webhook: {e}")
+            return False
+
     def release(self):
         if self.cap is not None:
             self.cap.release()
         if self.guardian_server is not None:
             self.guardian_server.stop()
+
