@@ -68,28 +68,45 @@ class HardwareIOBridge:
         Sends an automated SOS webhook dispatch to the registered guardian with live stream URL.
         Non-blocking with short timeout (timeout=3) to prevent freezing or lagging.
         """
-        webhook_url = getattr(config, "GUARDIAN_WEBHOOK_URL", "")
-        phone = getattr(config, "GUARDIAN_PHONE", "")
+        webhook_url = getattr(config, "GUARDIAN_WEBHOOK_URL", "").strip()
+        phone = getattr(config, "GUARDIAN_PHONE", "").strip()
 
         if not webhook_url:
             print("[INFO] [WEBHOOK] GUARDIAN_WEBHOOK_URL is not set in config.py. Skipping HTTP POST.")
             return False
 
+        # Clean any accidental angle brackets < > copied from documentation
+        webhook_url = webhook_url.replace("<", "").replace(">", "")
+
         try:
             import requests
 
             formatted_room = str(room_name).replace("_", " ")
-            payload = {
-                "text": f"🚨 Emergency SOS: Channaveer needs assistance in the {formatted_room}. Click here to view live camera feed: {public_url}",
-                "phone": phone
-            }
+            sos_text = (
+                f"🚨 Emergency SOS: Channaveer needs assistance in the {formatted_room}.\n"
+                f"📹 Live Camera Stream: {public_url}"
+            )
 
-            resp = requests.post(webhook_url, json=payload, timeout=3)
+            # Detect if it's a Telegram Bot API URL
+            if "api.telegram.org" in webhook_url:
+                payload = {"text": sos_text}
+                import urllib.parse
+                parsed = urllib.parse.urlparse(webhook_url)
+                params = urllib.parse.parse_qs(parsed.query)
+                if "chat_id" in params and params["chat_id"]:
+                    payload["chat_id"] = params["chat_id"][0]
+            else:
+                payload = {
+                    "text": sos_text,
+                    "phone": phone
+                }
+
+            resp = requests.post(webhook_url, json=payload, timeout=5)
             if resp.status_code in [200, 201, 204]:
-                print(f"[SUCCESS] [WEBHOOK] Guardian successfully notified via webhook (Status {resp.status_code}).")
+                print(f"[SUCCESS] [WEBHOOK] Guardian successfully notified via Telegram / Webhook (Status {resp.status_code}).")
                 return True
             else:
-                print(f"[WARNING] [WEBHOOK] Guardian webhook returned status code: {resp.status_code}")
+                print(f"[WARNING] [WEBHOOK] Guardian webhook returned status code {resp.status_code}: {resp.text[:120]}")
                 return False
         except Exception as e:
             print(f"[WARNING] [WEBHOOK] Failed to dispatch guardian webhook: {e}")
