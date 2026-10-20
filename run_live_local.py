@@ -66,6 +66,8 @@ class LiveLocalGogglesApp:
         self.disable_mic = disable_mic
         self.current_room = "study_room"
         self.search_target = None
+        self.last_dropoff_warning = -999.0
+        self.dropoff_active = False
         self.is_running = False
         self.window_name = "Assistive Smart Goggles AI — Live HUD"
 
@@ -333,8 +335,10 @@ class LiveLocalGogglesApp:
         mic_status = "MIC: ON" if self.mic_active else "MIC: OFF"
         sos_status = " | 🚨 SOS / CALL STREAMING" if (getattr(self, "guardian", None) and self.guardian.is_running) else ""
         scan_status = f" | 🔍 SCANNING: {self.search_target.upper()}" if self.search_target else ""
-        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}{scan_status}"
-        cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2, cv2.LINE_AA)
+        dropoff_status = " | [!] DROP-OFF DETECTED" if self.dropoff_active else ""
+        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}{scan_status}{dropoff_status}"
+        title_color = (0, 0, 255) if self.dropoff_active else (0, 255, 255)
+        cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, title_color, 2, cv2.LINE_AA)
 
         # Bottom banner for hotkeys and recent speech
         bottom_bar = np.zeros((64, w, 3), dtype=np.uint8)
@@ -401,10 +405,25 @@ class LiveLocalGogglesApp:
                         time.sleep(0.01)
                         continue
 
-                # 2. Continuous Reflex & Metric Depth (Inner 50% median meters) with Unified Person Announcements
-                combined_hud, speech = self.reflex.process_frame(frame, timestamp=now)
+                # 2. Continuous Reflex & Metric Depth with Negative Obstacle Drop-off Detection
+                res = self.reflex.process_frame(frame, timestamp=now)
+                if len(res) == 3:
+                    combined_hud, speech, dropoff_detected = res
+                else:
+                    combined_hud, speech = res
+                    dropoff_detected = getattr(self.reflex, "dropoff_detected", False)
+
+                self.dropoff_active = dropoff_detected
                 if speech:
                     self._update_hud_status(speech)
+
+                # Emergency Priority 0 Drop-off / Descending Stairs Warning with 4.0s cooldown
+                if dropoff_detected:
+                    if (now - self.last_dropoff_warning) >= 4.0:
+                        self.last_dropoff_warning = now
+                        msg = "Warning: Drop-off or descending stairs ahead."
+                        self.arbitrator.emit_alert(0, msg, now, key="dropoff_warning")
+                        self._update_hud_status(msg)
 
                 # Intent-Driven "Find [Object]" Scan Mode Detection
                 if self.search_target is not None and hasattr(self.reflex, "last_detections") and self.reflex.last_detections:

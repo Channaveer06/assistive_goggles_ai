@@ -26,6 +26,7 @@ class ReflexDepthEngine:
         self.person_cooldowns = {}     # {track_id: last_announced_timestamp}
         self.track_depth_history = {}  # {track_id: [(timestamp, depth), ...]}
         self.motion_cooldowns = {}     # {track_id: (last_motion_timestamp, status)}
+        self.dropoff_detected = False
 
         # 2. Load Depth Anything V2 Metric Indoor (ViT-Small) -> Returns real METERS
         try:
@@ -42,6 +43,34 @@ class ReflexDepthEngine:
     def set_social_engine(self, social_engine):
         """Connects social engine for unified person identity & micro-cue announcements."""
         self.social_engine = social_engine
+
+    def detect_negative_obstacle(self, depth_map):
+        """
+        Negative Obstacle (Drop-off & Descending Stairs) Detection via Depth Gradients.
+        Extracts bottom 30% center ground ROI and compares top vs bottom band metric depths.
+        Returns: (dropoff_detected: bool, top_band_depth: float, bottom_band_depth: float)
+        """
+        h, w = depth_map.shape[:2]
+        ground_roi = depth_map[int(h * 0.7):h, int(w * 0.3):int(w * 0.7)]
+        gh = ground_roi.shape[0]
+        if gh < 4 or ground_roi.shape[1] < 4:
+            return False, 0.0, 0.0
+
+        half_gh = int(gh * 0.5)
+        top_band = ground_roi[:half_gh, :]
+        bottom_band = ground_roi[half_gh:, :]
+
+        top_band_depth = float(np.median(top_band)) if top_band.size > 0 else 0.0
+        bottom_band_depth = float(np.median(bottom_band)) if bottom_band.size > 0 else 0.0
+
+        dropoff_detected = False
+        if bottom_band.size > 0 and top_band.size > 0:
+            # On flat surface, bottom_band (near feet) is closer than top_band.
+            # If bottom_band is deeper than top_band + 0.4m, or exceeds 1.5m, ground has dropped away.
+            if (bottom_band_depth > top_band_depth + 0.4) or (bottom_band_depth > 1.5):
+                dropoff_detected = True
+
+        return dropoff_detected, top_band_depth, bottom_band_depth
 
     def check_frame_quality(self, frame, timestamp):
         """VizWiz-inspired pre-check for dark rooms or severe camera blur."""
@@ -72,12 +101,16 @@ class ReflexDepthEngine:
         return depth_map
 
     def process_frame(self, frame, timestamp=0.0):
-        """Runs 1) Quality Check, 2) BoT-SORT Tracking, 3) Inner-Box Meter Depth, 4) Audio Alert with Movement Trajectory."""
+        """Runs 1) Quality Check, 2) BoT-SORT Tracking, 3) Inner-Box Meter Depth, 4) Drop-off Detection, 5) Audio Alert with Movement Trajectory."""
         h, w = frame.shape[:2]
         self.check_frame_quality(frame, timestamp)
 
         # Compute metric depth map (meters)
         depth_map = self.estimate_metric_depth(frame)
+
+        # Negative Obstacle (Drop-off & Descending Stairs) Detection via Ground ROI Depth Gradients
+        dropoff_detected, top_depth, bottom_depth = self.detect_negative_obstacle(depth_map)
+        self.dropoff_detected = dropoff_detected
 
         # Run YOLOv11 + BoT-SORT persistent tracking
         try:
@@ -208,8 +241,18 @@ class ReflexDepthEngine:
                             if speech_res:
                                 triggered_speech = speech_res
 
+        # Draw ground plane ROI overlay on annotated HUD
+        gx1, gy1 = int(w * 0.3), int(h * 0.7)
+        gx2, gy2 = int(w * 0.7), h - 2
+        if dropoff_detected:
+            cv2.rectangle(annotated, (gx1, gy1), (gx2, gy2), (0, 0, 255), 3)
+            cv2.putText(annotated, "WARNING: DROP-OFF / STAIRS", (gx1, max(20, gy1 - 8)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2, cv2.LINE_AA)
+        else:
+            cv2.rectangle(annotated, (gx1, gy1), (gx2, gy2), (0, 180, 0), 1)
+
         # Create colorized metric depth visualization for side-by-side inspection
         depth_norm = np.clip((depth_map / 6.0) * 255.0, 0, 255).astype(np.uint8)
         depth_colormap = cv2.applyColorMap(255 - depth_norm, cv2.COLORMAP_INFERNO)
         combined_hud = np.hstack((annotated, depth_colormap))
-        return combined_hud, triggered_speech
+        return combined_hud, triggered_speech, dropoff_detected
