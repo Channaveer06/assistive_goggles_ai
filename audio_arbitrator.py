@@ -33,9 +33,18 @@ class PriorityAudioArbitrator:
         self._msg_counter = 0
         self._stop_event = threading.Event()
         self._tts_thread = None
+        self.guardian_speaking = False
 
         if config.ENV_MODE == "LOCAL":
             self._start_speech_worker()
+
+    def clear_telemetry_queue(self):
+        """Clears all queued telemetry and obstacle alerts (priority >= 1)."""
+        with self.speech_queue.mutex:
+            p0_items = [item for item in self.speech_queue.queue if item[0] == 0]
+            self.speech_queue.queue.clear()
+            for it in p0_items:
+                self.speech_queue.queue.append(it)
 
     def _start_speech_worker(self):
         """Starts a dedicated non-blocking background daemon thread for offline SAPI5/PowerShell voice."""
@@ -69,6 +78,11 @@ class PriorityAudioArbitrator:
 
             priority, _, message = item
             if not message:
+                self.speech_queue.task_done()
+                continue
+
+            # Walkie-Talkie Lock: If guardian is speaking, suppress all Priority >= 1 (telemetry) announcements
+            if self.guardian_speaking and priority >= 1:
                 self.speech_queue.task_done()
                 continue
 
@@ -106,6 +120,8 @@ class PriorityAudioArbitrator:
                 pythoncom.CoUninitialize()
             except Exception:
                 pass
+
+    _play_loop = _speech_worker_loop
 
     def get_spatial_direction(self, x_center_ratio):
         """Maps horizontal bounding box center (0.0 to 1.0) to human clock/ear directions."""
@@ -155,6 +171,10 @@ class PriorityAudioArbitrator:
 
     def emit_alert(self, priority, message, current_time, key="general"):
         """Queues and synthesizes speech with immediate hotkey preemption & small queue buffer."""
+        # Walkie-Talkie Lock: If guardian is speaking, suppress all Priority >= 1 (telemetry) announcements
+        if self.guardian_speaking and priority >= 1:
+            return None
+
         # Only enforce cooldown on priority >= 2 (environmental/obstacle coaching)
         if priority >= 2:
             if key in self.general_cooldown and (current_time - self.general_cooldown[key]) < 4.0:

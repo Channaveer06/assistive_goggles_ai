@@ -672,6 +672,10 @@ class WebRTCGuardianServer:
 
             _safe_print(f"\n[TALKBACK] Received {len(audio_bytes)} bytes of guardian voice audio.")
 
+            # Clear telemetry queue immediately
+            if hasattr(self.arbitrator, "clear_telemetry_queue"):
+                self.arbitrator.clear_telemetry_queue()
+
             # Play in background thread so HTTP response returns immediately
             threading.Thread(
                 target=self._play_guardian_voice_worker,
@@ -690,6 +694,11 @@ class WebRTCGuardianServer:
 
     def _play_guardian_voice_worker(self, audio_path):
         """Plays the guardian voice clip through the user's speakers with an alert announcement."""
+        # Lock out telemetry while guardian speaks
+        if hasattr(self.arbitrator, "clear_telemetry_queue"):
+            self.arbitrator.clear_telemetry_queue()
+        self.arbitrator.guardian_speaking = True
+
         try:
             # 1. Announce incoming message via audio arbitrator
             self.arbitrator.emit_alert(
@@ -753,6 +762,8 @@ class WebRTCGuardianServer:
 
         except Exception as e:
             _safe_print(f"[AUDIO PLAYBACK ERROR] {e}")
+        finally:
+            self.arbitrator.guardian_speaking = False
 
     async def _handle_index(self, request):
         return web.Response(

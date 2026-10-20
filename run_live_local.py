@@ -65,6 +65,7 @@ class LiveLocalGogglesApp:
         self.test_mode = test_mode
         self.disable_mic = disable_mic
         self.current_room = "study_room"
+        self.search_target = None
         self.is_running = False
         self.window_name = "Assistive Smart Goggles AI — Live HUD"
 
@@ -121,14 +122,14 @@ class LiveLocalGogglesApp:
         print("   HOTKEYS (Work in Terminal & HUD Window):")
         print("   [e] Enroll live face into ChromaDB (name prompt)")
         print("   [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)")
-        print("   [f] Find where I last left my cell phone or bottle")
+        print("   [f] Intent-Driven 'Find [Object]' Scan Mode (e.g. 'find cell phone')")
         print("   [b] Turn-by-turn Navigation route to the bathroom")
         print("   [l] Check Room Light & Center Object Color")
         print("   [s] Trigger Guardian Emergency SOS")
         print("   [c] Call Guardian Two-Way Intercom (Voice Walkie-Talkie)")
         print("   [q] Quit cleanly")
         if self.mic_active:
-            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'call guardian', 'sos', 'bathroom', 'find', 'read', 'light'")
+            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'find [item]', 'where is [item]', 'call guardian', 'sos', 'bathroom', 'read', 'light'")
         print("=" * 65 + "\n")
 
     def _start_voice_listener(self):
@@ -160,7 +161,21 @@ class LiveLocalGogglesApp:
                 text = recognizer.recognize_google(audio).lower().strip()
                 print(f"🗣️ [VOICE DETECTED]: \"{text}\"")
 
-                if any(phrase in text for phrase in ["call guardian", "call channaveer", "call for help", "voice call"]):
+                # Detect search intent commands: "find [item]", "where is [item]", "search for [item]"
+                search_item = None
+                if "find " in text:
+                    search_item = text.split("find ", 1)[1].strip()
+                elif "where is " in text:
+                    search_item = text.split("where is ", 1)[1].strip()
+                elif "search for " in text:
+                    search_item = text.split("search for ", 1)[1].strip()
+
+                if search_item:
+                    clean_item = search_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
+                    if clean_item in ["phone", "cellphone"]:
+                        clean_item = "cell phone"
+                    self.voice_command_queue.put(('find', clean_item))
+                elif any(phrase in text for phrase in ["call guardian", "call channaveer", "call for help", "voice call"]):
                     self.voice_command_queue.put('c')
                 elif any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
                     self.voice_command_queue.put('b')
@@ -276,21 +291,14 @@ class LiveLocalGogglesApp:
                 self.ocr_task_queue.put((current_frame.copy(), timestamp))
             self._update_hud_status("Analyzing text, currency & medicine labels...")
 
-        elif key_char == 'f':
-            # [f] Find where I last left my cell phone or bottle
-            print("🔍 [ACTION] Spatial Memory Item Query Triggered...")
-            phone_res = self.memory.query_item("cell phone")
-            bottle_res = self.memory.query_item("bottle")
-
-            if "not seen" not in phone_res:
-                ans = phone_res
-            elif "not seen" not in bottle_res:
-                ans = bottle_res
-            else:
-                ans = "I have not seen your cell phone or bottle recently in this room."
-
-            self.arbitrator.emit_alert(0, ans, timestamp, key="find_item")
-            self._update_hud_status(ans)
+        elif (isinstance(key_char, tuple) and key_char[0] == 'find') or key_char == 'f':
+            # Intent-Driven "Find [Object]" Scan Mode
+            item = key_char[1] if isinstance(key_char, tuple) else "cell phone"
+            print(f"🔍 [ACTION] Intent-Driven Scan Mode Triggered for: {item}...")
+            self.search_target = item
+            msg = f"Searching for {item}. Please scan the room slowly."
+            self.arbitrator.emit_alert(0, msg, timestamp, key="find_mode_start")
+            self._update_hud_status(msg)
 
         elif key_char == 'b':
             # [b] Speak turn-by-turn Indoor Navigation route to the bathroom
@@ -324,7 +332,8 @@ class LiveLocalGogglesApp:
         top_bar = np.zeros((46, w, 3), dtype=np.uint8)
         mic_status = "MIC: ON" if self.mic_active else "MIC: OFF"
         sos_status = " | 🚨 SOS / CALL STREAMING" if (getattr(self, "guardian", None) and self.guardian.is_running) else ""
-        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}"
+        scan_status = f" | 🔍 SCANNING: {self.search_target.upper()}" if self.search_target else ""
+        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}{scan_status}"
         cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2, cv2.LINE_AA)
 
         # Bottom banner for hotkeys and recent speech
@@ -396,6 +405,54 @@ class LiveLocalGogglesApp:
                 combined_hud, speech = self.reflex.process_frame(frame, timestamp=now)
                 if speech:
                     self._update_hud_status(speech)
+
+                # Intent-Driven "Find [Object]" Scan Mode Detection
+                if self.search_target is not None and hasattr(self.reflex, "last_detections") and self.reflex.last_detections:
+                    target_norm = self.search_target.lower().strip()
+                    if target_norm in ["phone", "cellphone"]:
+                        target_norm = "cell phone"
+
+                    matched_det = None
+                    furniture_dets = []
+
+                    for det in self.reflex.last_detections:
+                        lbl = det["label"].lower().strip()
+                        if lbl in ["dining table", "desk", "chair", "couch", "bed", "table"]:
+                            furniture_dets.append(det)
+                        if lbl == target_norm or (target_norm in lbl) or (lbl in target_norm):
+                            matched_det = det
+
+                    if matched_det is not None:
+                        # Determine horizontal orientation: Left (< width/3), Center (width/3 to 2*width/3), Right (> 2*width/3)
+                        cx = matched_det["center_x"]
+                        w_frame = frame.shape[1]
+                        if cx < (w_frame / 3.0):
+                            dir_str = "left"
+                        elif cx > (2.0 * w_frame / 3.0):
+                            dir_str = "right"
+                        else:
+                            dir_str = "center"
+
+                        # Check vertical overlap against furniture bounding boxes ("dining table", "desk", "chair")
+                        tx1, ty1, tx2, ty2 = matched_det.get("box", (cx - 10, matched_det["center_y"] - 10, cx + 10, matched_det["center_y"] + 10))
+                        found_furniture = None
+                        for f_det in furniture_dets:
+                            fx1, fy1, fx2, fy2 = f_det.get("box", (0, 0, 0, 0))
+                            overlap_x = max(0, min(tx2, fx2) - max(tx1, fx1))
+                            if overlap_x > 0.2 * max(1, tx2 - tx1):
+                                if ty2 >= fy1 - 40 and ty1 <= fy2:
+                                    found_furniture = f_det["label"].replace("dining table", "table")
+                                    break
+
+                        target_depth = matched_det["dist_m"]
+                        if found_furniture:
+                            found_msg = f"Found {self.search_target} on your {dir_str}, resting on the {found_furniture}, {target_depth:.1f} meters away."
+                        else:
+                            found_msg = f"Found {self.search_target} on your {dir_str}, {target_depth:.1f} meters away."
+
+                        self.arbitrator.emit_alert(0, found_msg, now, key="found_search_target")
+                        self._update_hud_status(found_msg)
+                        self.search_target = None
 
                 # 3. Continuous Episodic Object Memory Logging
                 if hasattr(self.reflex, "last_detections") and self.reflex.last_detections:

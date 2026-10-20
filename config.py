@@ -8,7 +8,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Safety & Distance Thresholds (in real meters)
 CRITICAL_DANGER_M = 1.2          # Immediate stop/hazard warning (under 1.2 meters)
 WARNING_DISTANCE_M = 2.5         # Standard obstacle awareness (under 2.5 meters)
-TRACK_COOLDOWN_SEC = 4.0         # Wait 4 seconds before re-announcing the same Track ID
+TRACK_COOLDOWN_SEC = 4.0         # Wait 4 seconds before re-announcing general telemetry
+PERSON_TRACK_COOLDOWN_SEC = 20.0  # 20.0-second delay between repetitive person announcements
 
 # VizWiz Frame Quality Thresholds (Framing & Lighting Coach)
 MIN_BRIGHTNESS = 35.0            # Mean pixel luminance (0-255) before warning "Too dark"
