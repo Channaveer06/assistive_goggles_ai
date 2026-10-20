@@ -66,6 +66,8 @@ class LiveLocalGogglesApp:
         self.disable_mic = disable_mic
         self.current_room = "study_room"
         self.search_target = None
+        self.memory_query = None
+        self.episodic_memory = {}
         self.last_dropoff_warning = -999.0
         self.dropoff_active = False
         self.is_running = False
@@ -125,13 +127,14 @@ class LiveLocalGogglesApp:
         print("   [e] Enroll live face into ChromaDB (name prompt)")
         print("   [r] Fingertip Point-to-Read OCR (Medicine / Currency / Text)")
         print("   [f] Intent-Driven 'Find [Object]' Scan Mode (e.g. 'find cell phone')")
+        print("   [m] Retrospective Visual Memory Recall (e.g. 'where did I leave my cell phone')")
         print("   [b] Turn-by-turn Navigation route to the bathroom")
         print("   [l] Check Room Light & Center Object Color")
         print("   [s] Trigger Guardian Emergency SOS")
         print("   [c] Call Guardian Two-Way Intercom (Voice Walkie-Talkie)")
         print("   [q] Quit cleanly")
         if self.mic_active:
-            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'find [item]', 'where is [item]', 'call guardian', 'sos', 'bathroom', 'read', 'light'")
+            print("   🎙️ HANDS-FREE VOICE COMMANDS ACTIVE: Speak 'where did I leave my [item]', 'find [item]', 'call guardian', 'sos', 'bathroom', 'read', 'light'")
         print("=" * 65 + "\n")
 
     def _start_voice_listener(self):
@@ -163,24 +166,49 @@ class LiveLocalGogglesApp:
                 text = recognizer.recognize_google(audio).lower().strip()
                 print(f"🗣️ [VOICE DETECTED]: \"{text}\"")
 
-                # Detect search intent commands: "find [item]", "where is [item]", "search for [item]"
-                search_item = None
-                if "find " in text:
-                    search_item = text.split("find ", 1)[1].strip()
-                elif "where is " in text:
-                    search_item = text.split("where is ", 1)[1].strip()
-                elif "search for " in text:
-                    search_item = text.split("search for ", 1)[1].strip()
+                # 1. Detect Retrospective Memory Queries: "where did i leave my [item]", "where did i put my [item]"
+                memory_triggers = [
+                    "where did i leave my ",
+                    "where did i leave ",
+                    "where did i put my ",
+                    "where did i put ",
+                    "where did i place my ",
+                    "where did i place ",
+                    "where did i keep my ",
+                    "where did i keep "
+                ]
+                mem_item = None
+                for trigger in memory_triggers:
+                    if trigger in text:
+                        mem_item = text.split(trigger, 1)[1].strip()
+                        break
 
-                if search_item:
-                    clean_item = search_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
+                if mem_item:
+                    clean_item = mem_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
                     if clean_item in ["phone", "cellphone"]:
                         clean_item = "cell phone"
-                    self.voice_command_queue.put(('find', clean_item))
+                    self.voice_command_queue.put(('memory_query', clean_item))
+                # 2. Detect search intent commands: "find [item]", "where is [item]", "search for [item]"
+                elif any(p in text for p in ["find ", "where is ", "search for "]):
+                    search_item = None
+                    if "find " in text:
+                        search_item = text.split("find ", 1)[1].strip()
+                    elif "where is " in text:
+                        search_item = text.split("where is ", 1)[1].strip()
+                    elif "search for " in text:
+                        search_item = text.split("search for ", 1)[1].strip()
+
+                    if search_item:
+                        clean_item = search_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
+                        if clean_item in ["phone", "cellphone"]:
+                            clean_item = "cell phone"
+                        self.voice_command_queue.put(('find', clean_item))
                 elif any(phrase in text for phrase in ["call guardian", "call channaveer", "call for help", "voice call"]):
                     self.voice_command_queue.put('c')
                 elif any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
                     self.voice_command_queue.put('b')
+                elif any(phrase in text for phrase in ["where did i leave", "where did i put", "recall", "last seen"]):
+                    self.voice_command_queue.put('m')
                 elif any(w in text for w in ["find", "where is", "phone", "bottle", "item"]):
                     self.voice_command_queue.put('f')
                 elif any(w in text for w in ["read", "medicine", "currency", "money", "rupee"]):
@@ -302,6 +330,13 @@ class LiveLocalGogglesApp:
             self.arbitrator.emit_alert(0, msg, timestamp, key="find_mode_start")
             self._update_hud_status(msg)
 
+        elif (isinstance(key_char, tuple) and key_char[0] == 'memory_query') or key_char == 'm':
+            # Retrospective Visual Memory Recall Query
+            item = key_char[1] if isinstance(key_char, tuple) else "cell phone"
+            print(f"🧠 [ACTION] Retrospective Visual Memory Query Triggered for: {item}...")
+            self.memory_query = item
+            self._update_hud_status(f"Recalling memory of {item}...")
+
         elif key_char == 'b':
             # [b] Speak turn-by-turn Indoor Navigation route to the bathroom
             print("🧭 [ACTION] Indoor Navigation Route to Bathroom Triggered...")
@@ -335,14 +370,15 @@ class LiveLocalGogglesApp:
         mic_status = "MIC: ON" if self.mic_active else "MIC: OFF"
         sos_status = " | 🚨 SOS / CALL STREAMING" if (getattr(self, "guardian", None) and self.guardian.is_running) else ""
         scan_status = f" | 🔍 SCANNING: {self.search_target.upper()}" if self.search_target else ""
+        recall_status = f" | 🧠 RECALL: {self.memory_query.upper()}" if self.memory_query else ""
         dropoff_status = " | [!] DROP-OFF DETECTED" if self.dropoff_active else ""
-        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}{scan_status}{dropoff_status}"
+        title = f"ASSISTIVE SMART GOGGLES AI  |  FPS: {fps:04.1f}  |  ROOM: {self.current_room.upper()}  |  {mic_status}{sos_status}{scan_status}{recall_status}{dropoff_status}"
         title_color = (0, 0, 255) if self.dropoff_active else (0, 255, 255)
         cv2.putText(top_bar, title, (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.65, title_color, 2, cv2.LINE_AA)
 
         # Bottom banner for hotkeys and recent speech
         bottom_bar = np.zeros((64, w, 3), dtype=np.uint8)
-        hotkeys_text = "[e] Enroll  [r] OCR/Medicine  [f] Find  [b] Nav  [l] Light  [s] SOS  [c] Call  [q] Quit"
+        hotkeys_text = "[e] Enroll  [r] OCR  [f] Find  [m] Recall  [b] Nav  [l] Light  [s] SOS  [c] Call  [q] Quit"
         cv2.putText(bottom_bar, hotkeys_text, (16, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (180, 180, 180), 1, cv2.LINE_AA)
 
         # Display latest spoken message
@@ -473,9 +509,115 @@ class LiveLocalGogglesApp:
                         self._update_hud_status(found_msg)
                         self.search_target = None
 
+                # Retrospective Visual Memory Retrieval Logic
+                if self.memory_query is not None:
+                    query_item = self.memory_query
+                    target_norm = query_item.lower().strip()
+                    if target_norm in ["phone", "cellphone"]:
+                        target_norm = "cell phone"
+
+                    matched_det = None
+                    furniture_dets = []
+
+                    if hasattr(self.reflex, "last_detections") and self.reflex.last_detections:
+                        for det in self.reflex.last_detections:
+                            lbl = det["label"].lower().strip()
+                            if lbl in ["dining table", "desk", "chair", "couch", "bed", "table"]:
+                                furniture_dets.append(det)
+                            if lbl == target_norm or (target_norm in lbl) or (lbl in target_norm):
+                                matched_det = det
+
+                    if matched_det is not None:
+                        # Item is currently visible in live YOLO frame -> announce live location
+                        cx = matched_det["center_x"]
+                        w_frame = frame.shape[1]
+                        if cx < (w_frame / 3.0):
+                            dir_str = "left"
+                        elif cx > (2.0 * w_frame / 3.0):
+                            dir_str = "right"
+                        else:
+                            dir_str = "center"
+
+                        tx1, ty1, tx2, ty2 = matched_det.get("box", (cx - 10, matched_det["center_y"] - 10, cx + 10, matched_det["center_y"] + 10))
+                        found_furniture = None
+                        for f_det in furniture_dets:
+                            fx1, fy1, fx2, fy2 = f_det.get("box", (0, 0, 0, 0))
+                            overlap_x = max(0, min(tx2, fx2) - max(tx1, fx1))
+                            if overlap_x > 0.2 * max(1, tx2 - tx1):
+                                if ty2 >= fy1 - 40 and ty1 <= fy2:
+                                    found_furniture = f_det["label"].replace("dining table", "dining table")
+                                    break
+
+                        target_depth = matched_det["dist_m"]
+                        if found_furniture:
+                            found_msg = f"Found {query_item} on your {dir_str}, resting on the {found_furniture}, {target_depth:.1f} meters away."
+                        else:
+                            found_msg = f"Found {query_item} on your {dir_str}, {target_depth:.1f} meters away."
+
+                        self.arbitrator.emit_alert(0, found_msg, now, key="found_memory_target")
+                        self._update_hud_status(found_msg)
+                    else:
+                        # Item NOT in current frame -> check self.episodic_memory
+                        mem = self.episodic_memory.get(target_norm) or self.episodic_memory.get(query_item)
+                        if mem:
+                            elapsed_sec = max(0.0, time.time() - mem["timestamp"])
+                            minutes_ago = int(elapsed_sec / 60)
+                            time_str = "just now" if minutes_ago < 1 else f"{minutes_ago} minutes ago"
+                            location = mem.get("location", "nearby")
+                            msg = f"I don't see the {query_item} right now, but I saw it {location} {time_str}."
+                            self.arbitrator.emit_alert(0, msg, now, key="recall_memory_target")
+                            self._update_hud_status(msg)
+                        else:
+                            msg = f"I have no recent memory of the {query_item}."
+                            self.arbitrator.emit_alert(0, msg, now, key="recall_memory_none")
+                            self._update_hud_status(msg)
+
+                    self.memory_query = None
+
                 # 3. Continuous Episodic Object Memory Logging
                 if hasattr(self.reflex, "last_detections") and self.reflex.last_detections:
                     self.memory.log_scene_detections(self.reflex.last_detections, current_room=self.current_room)
+
+                    # Retrospective Visual Memory: Background Logging of passive objects resting on furniture
+                    furniture_dets = []
+                    passive_dets = []
+                    furniture_classes = {"dining table", "desk", "chair", "couch", "bed", "table"}
+                    passive_classes = {
+                        "bottle", "cell phone", "cup", "book", "laptop", "mouse", "keyboard",
+                        "backpack", "handbag", "remote", "clock", "vase", "bowl", "keys", "glasses"
+                    }
+
+                    for det in self.reflex.last_detections:
+                        lbl = det["label"].lower().strip()
+                        if lbl in furniture_classes:
+                            furniture_dets.append(det)
+                        elif lbl in passive_classes or (lbl not in {"person", "car", "motorcycle", "bus", "truck"} and lbl not in furniture_classes):
+                            passive_dets.append(det)
+
+                    if furniture_dets and passive_dets:
+                        current_wall_time = time.time()
+                        for p_det in passive_dets:
+                            p_lbl = p_det["label"].lower().strip()
+                            if p_lbl in ["phone", "cellphone"]:
+                                p_lbl = "cell phone"
+
+                            cx = p_det["center_x"]
+                            cy = p_det["center_y"]
+                            tx1, ty1, tx2, ty2 = p_det.get("box", (cx - 10, cy - 10, cx + 10, cy + 10))
+
+                            for f_det in furniture_dets:
+                                fx1, fy1, fx2, fy2 = f_det.get("box", (0, 0, 0, 0))
+                                overlap_x = max(0, min(tx2, fx2) - max(tx1, fx1))
+                                if overlap_x > 0.2 * max(1, tx2 - tx1):
+                                    if ty2 >= fy1 - 40 and ty1 <= fy2:
+                                        furniture_label = f_det["label"].lower().strip()
+                                        self.episodic_memory[p_lbl] = {
+                                            "location": f"resting on the {furniture_label}",
+                                            "timestamp": current_wall_time
+                                        }
+                                        if p_det["label"].lower().strip() != p_lbl:
+                                            self.episodic_memory[p_det["label"].lower().strip()] = self.episodic_memory[p_lbl]
+                                        break
 
                 # 4. Asynchronous Face & Social Micro-Cues (Every 10 frames)
                 if frame_count % 10 == 0:
@@ -528,8 +670,8 @@ class LiveLocalGogglesApp:
                     self.handle_hotkey(key_char, frame, now)
 
                 # Test mode auto-triggers for verification
-                if self.test_mode and frame_count in [5, 10, 15, 20, 25, 30, 32]:
-                    test_keys = {5: 'f', 10: 'b', 15: 'l', 20: 's', 25: 'r', 30: 'e', 32: 'c'}
+                if self.test_mode and frame_count in [5, 8, 10, 15, 20, 25, 30, 32]:
+                    test_keys = {5: 'f', 8: 'm', 10: 'b', 15: 'l', 20: 's', 25: 'r', 30: 'e', 32: 'c'}
                     k = test_keys[frame_count]
                     print(f"\n🧪 [TEST VERIFICATION] Auto-triggering key [{k}] at frame {frame_count}...")
                     self.handle_hotkey(k, frame, now)
