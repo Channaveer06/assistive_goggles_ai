@@ -5,6 +5,11 @@ import subprocess
 import config
 
 try:
+    import pyttsx3
+except ImportError:
+    pyttsx3 = None
+
+try:
     from gTTS import gTTS
 except ImportError:
     try:
@@ -34,6 +39,52 @@ class PriorityAudioArbitrator:
         self._stop_event = threading.Event()
         self._tts_thread = None
         self.guardian_speaking = False
+        self.selected_voice_id = None
+        self.selected_voice_name = "Default"
+
+        # 1. Inspect & Select Native Offline Indian English Voice via pyttsx3
+        self.engine = None
+        if pyttsx3 is not None:
+            try:
+                self.engine = pyttsx3.init()
+                # 2. Optimize Cadence: 165 words per minute, maximum volume
+                self.engine.setProperty('rate', 165)
+                self.engine.setProperty('volume', 1.0)
+
+                voices = self.engine.getProperty('voices')
+                voice_names = [getattr(v, 'name', str(v)) for v in (voices or [])]
+                print(f"[AUDIO] Installed system voices: {voice_names}")
+
+                indian_voice = None
+                for v in (voices or []):
+                    v_name = getattr(v, "name", "").lower()
+                    v_id = getattr(v, "id", "").lower()
+                    if any(k in v_name or k in v_id for k in ["heera", "ravi", "india"]):
+                        indian_voice = v
+                        break
+
+                if indian_voice is not None:
+                    self.selected_voice_id = indian_voice.id
+                    self.selected_voice_name = indian_voice.name
+                    self.engine.setProperty('voice', indian_voice.id)
+                    print(f"[AUDIO] Active voice set to Indian English: {indian_voice.name}")
+                else:
+                    default_voice = self.engine.getProperty('voice')
+                    default_name = default_voice
+                    for v in (voices or []):
+                        if getattr(v, 'id', None) == default_voice:
+                            default_name = v.name
+                            break
+                    self.selected_voice_id = default_voice
+                    self.selected_voice_name = default_name
+                    print(
+                        f"[AUDIO] Indian voice pack not detected in Windows. Using default: {default_name}. "
+                        "To install, go to Windows Settings -> Time & Language -> Speech -> Add Voices -> English (India)."
+                    )
+                self.engine.runAndWait()
+            except Exception as e:
+                print(f"⚠️ pyttsx3 voice selection notice: {e}")
+                self.engine = None
 
         if config.ENV_MODE == "LOCAL":
             self._start_speech_worker()
@@ -47,28 +98,34 @@ class PriorityAudioArbitrator:
                 self.speech_queue.queue.append(it)
 
     def _start_speech_worker(self):
-        """Starts a dedicated non-blocking background daemon thread for offline SAPI5/PowerShell voice."""
+        """Starts a dedicated non-blocking background daemon thread for offline pyttsx3/SAPI5 voice."""
         if self._tts_thread is not None and self._tts_thread.is_alive():
             return
         self._tts_thread = threading.Thread(target=self._speech_worker_loop, daemon=True)
         self._tts_thread.start()
 
     def _speech_worker_loop(self):
-        """Dedicated background thread worker executing offline zero-lag TTS via native SAPI.SpVoice."""
-        speaker = None
+        """Dedicated background thread worker executing offline zero-lag TTS via pyttsx3/SAPI with PowerShell fallback."""
+        worker_engine = None
         use_com = False
 
         try:
             import pythoncom
-            import win32com.client
             pythoncom.CoInitialize()
-            speaker = win32com.client.Dispatch("SAPI.SpVoice")
-            speaker.Rate = 2  # Natural, responsive speech rate
-            speaker.Volume = 100
             use_com = True
-        except Exception as e:
-            print(f"⚠️ SAPI.SpVoice COM initialization warning: {e}. Falling back to PowerShell TTS.")
-            speaker = None
+        except Exception:
+            pass
+
+        if pyttsx3 is not None:
+            try:
+                worker_engine = pyttsx3.init()
+                if self.selected_voice_id:
+                    worker_engine.setProperty('voice', self.selected_voice_id)
+                worker_engine.setProperty('rate', 165)
+                worker_engine.setProperty('volume', 1.0)
+            except Exception as e:
+                print(f"⚠️ Worker pyttsx3 initialization notice: {e}")
+                worker_engine = None
 
         while not self._stop_event.is_set():
             try:
@@ -87,13 +144,13 @@ class PriorityAudioArbitrator:
                 continue
 
             spoken = False
-            if use_com and speaker is not None:
+            if worker_engine is not None:
                 try:
-                    # SVSFDefault = 0 (synchronous speak inside background worker thread)
-                    speaker.Speak(message, 0)
+                    worker_engine.say(message)
+                    worker_engine.runAndWait()
                     spoken = True
                 except Exception as e:
-                    print(f"⚠️ SAPI Speak error: {e}")
+                    print(f"⚠️ pyttsx3 speech error: {e}")
 
             if not spoken:
                 try:
@@ -101,7 +158,10 @@ class PriorityAudioArbitrator:
                     ps_cmd = (
                         f"Add-Type -AssemblyName System.Speech; "
                         f"$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-                        f"$synth.Rate = 2; $synth.Speak('{clean_msg}')"
+                        f"$synth.Rate = 1; "
+                        f"$voice = $synth.GetInstalledVoices() | Where-Object {{ $_.VoiceInfo.Name -match 'Heera|Ravi|India' }} | Select-Object -First 1; "
+                        f"if ($voice) {{ $synth.SelectVoice($voice.VoiceInfo.Name) }}; "
+                        f"$synth.Speak('{clean_msg}')"
                     )
                     subprocess.run(
                         ["powershell", "-NoProfile", "-Command", ps_cmd],
@@ -113,6 +173,12 @@ class PriorityAudioArbitrator:
                     print(f"⚠️ PowerShell speech synthesis error: {e}")
 
             self.speech_queue.task_done()
+
+        if worker_engine is not None:
+            try:
+                worker_engine.stop()
+            except Exception:
+                pass
 
         if use_com:
             try:
@@ -222,4 +288,11 @@ class PriorityAudioArbitrator:
     def stop(self):
         """Signals the background TTS thread to stop."""
         self._stop_event.set()
+        if hasattr(self, 'engine') and self.engine is not None:
+            try:
+                self.engine.stop()
+            except Exception:
+                pass
+        if self._tts_thread is not None and self._tts_thread.is_alive():
+            self._tts_thread.join(timeout=1.5)
 
