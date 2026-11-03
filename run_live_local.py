@@ -56,6 +56,7 @@ from modules.face_social import FaceAndSocialEngine
 from modules.episodic_memory import EpisodicObjectMemory
 from modules.finger_ocr import FingerOCRAndUtilities
 from modules.indoor_nav import IndoorTopologicalNavigator
+from modules.face_ident import FaceRecognizer
 
 
 class LiveLocalGogglesApp:
@@ -85,12 +86,21 @@ class LiveLocalGogglesApp:
         self.guardian = self.io.guardian_server
 
         # 3. Initialize Core Vision & Independence Modules
+        print("\n[DeepFace] Initializing Local Facial Recognition Engine...")
+        self.face_recognizer = FaceRecognizer()
+        self.track_identities = {}
+
         print("\n[1/5] Loading Face & Social Micro-Cue Engine...")
         self.social = FaceAndSocialEngine(self.arbitrator)
 
         print("\n[2/5] Loading Reflex Depth Engine (YOLOv11 + Metric Depth)...")
-        # Connect social engine for Unified Person + Face Announcements
-        self.reflex = ReflexDepthEngine(self.arbitrator, social_engine=self.social)
+        # Connect social engine and track identities for Unified Person + Face Announcements
+        self.reflex = ReflexDepthEngine(
+            self.arbitrator,
+            social_engine=self.social,
+            track_identities=self.track_identities,
+            async_recognize_cb=self._async_recognize
+        )
 
         print("\n[3/5] Loading Episodic Object Memory...")
         self.memory = EpisodicObjectMemory()
@@ -225,6 +235,18 @@ class LiveLocalGogglesApp:
                 continue
             except Exception:
                 time.sleep(0.5)
+
+    def _async_recognize(self, track_id, crop):
+        """Asynchronously runs DeepFace face recognition on person crop and updates identity."""
+        try:
+            matched_name = self.face_recognizer.identify_face(crop)
+            if matched_name and matched_name != "Unknown":
+                self.track_identities[track_id] = matched_name
+                print(f"👤 [DeepFace Match] Track ID #{track_id} recognized as: {matched_name}")
+            else:
+                self.track_identities[track_id] = "Unknown person"
+        except Exception:
+            self.track_identities[track_id] = "Unknown person"
 
     def _async_face_worker(self):
         """Processes InsightFace + YOLOv11-Pose asynchronously and feeds unified announcements."""
@@ -448,6 +470,33 @@ class LiveLocalGogglesApp:
                 else:
                     combined_hud, speech = res
                     dropoff_detected = getattr(self.reflex, "dropoff_detected", False)
+
+                # Asynchronous Local Facial Recognition via DeepFace
+                if hasattr(self.reflex, "last_results") and self.reflex.last_results is not None:
+                    res_boxes = self.reflex.last_results.boxes
+                    if res_boxes is not None and len(res_boxes) > 0:
+                        boxes_coords = res_boxes.xyxy.cpu().numpy()
+                        classes_arr = res_boxes.cls.cpu().numpy().astype(int)
+                        track_ids_arr = (
+                            res_boxes.id.cpu().numpy().astype(int)
+                            if res_boxes.id is not None
+                            else np.arange(len(boxes_coords))
+                        )
+                        h_frame, w_frame = frame.shape[:2]
+                        for b_box, c_id, t_id in zip(boxes_coords, classes_arr, track_ids_arr):
+                            c_lbl = self.reflex.detector.names[c_id]
+                            if c_lbl == "person" and t_id not in self.track_identities:
+                                self.track_identities[t_id] = "Person"
+                                bx1, by1, bx2, by2 = map(int, b_box)
+                                bx1, by1 = max(0, bx1), max(0, by1)
+                                bx2, by2 = min(w_frame, bx2), min(h_frame, by2)
+                                person_crop = frame[by1:by2, bx1:bx2].copy()
+                                if person_crop.size > 0:
+                                    threading.Thread(
+                                        target=self._async_recognize,
+                                        args=(t_id, person_crop),
+                                        daemon=True
+                                    ).start()
 
                 self.dropoff_active = dropoff_detected
                 if speech:

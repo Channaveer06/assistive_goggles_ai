@@ -10,9 +10,11 @@ import config
 class ReflexDepthEngine:
     ALERT_CLASSES = {"person", "car", "motorcycle", "bus", "truck"}
 
-    def __init__(self, arbitrator, social_engine=None):
+    def __init__(self, arbitrator, social_engine=None, track_identities=None, async_recognize_cb=None):
         self.arbitrator = arbitrator
         self.social_engine = social_engine
+        self.track_identities = track_identities if track_identities is not None else {}
+        self.async_recognize_cb = async_recognize_cb
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Initializing Reflex & Metric Depth Engine on {self.device.upper()}...")
 
@@ -118,6 +120,7 @@ class ReflexDepthEngine:
         except Exception:
             results = self.detector.track(frame, persist=True, tracker="bytetrack.yaml", verbose=False)[0]
 
+        self.last_results = results
         annotated = frame.copy()
         triggered_speech = None
         self.last_detections = []
@@ -190,8 +193,13 @@ class ReflexDepthEngine:
                     color = (0, 165, 255)
 
                 face_name, face_cues = None, None
-                if label_name == "person" and self.social_engine is not None:
-                    face_name, face_cues = self.social_engine.get_face_for_person_box((x1, y1, x2, y2))
+                if label_name == "person":
+                    if self.social_engine is not None:
+                        face_name, face_cues = self.social_engine.get_face_for_person_box((x1, y1, x2, y2))
+                    if self.track_identities and track_id in self.track_identities:
+                        stored_id = self.track_identities[track_id]
+                        if stored_id and stored_id not in ["Person", "Unknown person"]:
+                            face_name = stored_id
 
                 if label_name == "person" and face_name and not face_name.startswith("Verifying"):
                     announced_name = face_name if face_name != "Unknown person" else "person"
@@ -200,22 +208,24 @@ class ReflexDepthEngine:
                     announced_name = label_name
                     cues_str = ""
 
+                resolved_name = self.track_identities.get(track_id, announced_name) if label_name == "person" else announced_name
                 cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
                 motion_tag = f" [{motion_status}]" if motion_status else ""
-                tag = f"ID#{track_id} {announced_name}: {dist_m:.1f}m ({direction}){motion_tag}"
+                tag = f"ID#{track_id} {resolved_name}: {dist_m:.1f}m ({direction}){motion_tag}"
                 cv2.putText(annotated, tag, (x1, max(20, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
 
                 # Clutter Filter: Only ALERT_CLASSES trigger unprompted telemetry
                 # Everyday items (bottles, cups, chairs, phones) are suppressed unless explicitly queried in Find Mode
                 if label_name in self.ALERT_CLASSES and dist_m <= config.WARNING_DISTANCE_M:
                     last_motion_t, last_motion_type = self.motion_cooldowns.get(track_id, (0.0, None))
+                    person_label = self.track_identities.get(track_id, announced_name.capitalize()) if label_name == "person" else announced_name.capitalize()
 
                     if motion_status == "moving closer":
                         # Safety override: moving closer preempts the 20-second cooldown immediately
                         if (timestamp - last_motion_t) >= 3.0 or last_motion_type != "moving closer":
                             self.motion_cooldowns[track_id] = (timestamp, "moving closer")
                             self.person_cooldowns[track_id] = timestamp
-                            msg = f"{announced_name.capitalize()} moving closer, now {dist_m:.1f} meters."
+                            msg = f"{person_label} moving closer, now {dist_m:.1f} meters."
                             speech_res = self.arbitrator.emit_alert(1, msg, timestamp, key=f"trk_motion_{track_id}")
                             if speech_res:
                                 triggered_speech = speech_res
@@ -223,7 +233,7 @@ class ReflexDepthEngine:
                         if (timestamp - last_motion_t) >= 4.0 or last_motion_type != "moving away":
                             self.motion_cooldowns[track_id] = (timestamp, "moving away")
                             self.person_cooldowns[track_id] = timestamp
-                            msg = f"{announced_name.capitalize()} moving away, {dist_m:.1f} meters."
+                            msg = f"{person_label} moving away, {dist_m:.1f} meters."
                             speech_res = self.arbitrator.emit_alert(2, msg, timestamp, key=f"trk_motion_{track_id}")
                             if speech_res:
                                 triggered_speech = speech_res
@@ -236,7 +246,8 @@ class ReflexDepthEngine:
                             self.person_cooldowns[track_id] = timestamp
                             priority = 1 if dist_m <= config.CRITICAL_DANGER_M else 2
                             prefix = "Stop! " if priority == 1 else ""
-                            msg = f"{prefix}{announced_name} {dist_m:.1f} meters {direction}{cues_str}"
+                            cooldown_label = self.track_identities.get(track_id, announced_name) if label_name == "person" else announced_name
+                            msg = f"{prefix}{cooldown_label} {dist_m:.1f} meters {direction}{cues_str}"
                             speech_res = self.arbitrator.emit_alert(priority, msg, timestamp, key=f"trk_{track_id}")
                             if speech_res:
                                 triggered_speech = speech_res

@@ -38,5 +38,6 @@ temp_guardian_voice.*
 *.log
 
 # OS artifacts
+*.pkl
 .DS_Store
 Thumbs.db
