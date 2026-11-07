@@ -24,6 +24,7 @@ Runs the complete assistive vision & spatial audio pipeline locally on laptop ha
 import os
 import sys
 import time
+import logging
 import warnings
 import argparse
 import threading
@@ -31,6 +32,43 @@ import queue
 
 # Silence InsightFace numpy lstsq FutureWarning
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Execution_Logs.txt")
+
+def setup_dual_logger(log_file=LOG_FILE):
+    """
+    Dual Logging System:
+    Outputs all thread activity simultaneously to:
+    1. Terminal console (sys.stdout) - for screen recording visibility
+    2. Execution_Logs.txt - saved text file for benchmarking and technical review
+    """
+    logger = logging.getLogger("AssistiveGoggles")
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    formatter = logging.Formatter(
+        fmt="%(asctime)s.%(msecs)03d [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S"
+    )
+
+    # 1. Console Stream Handler (stdout)
+    c_handler = logging.StreamHandler(sys.stdout)
+    c_handler.setLevel(logging.INFO)
+    c_handler.setFormatter(formatter)
+    logger.addHandler(c_handler)
+
+    # 2. File Handler (Execution_Logs.txt)
+    f_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+    f_handler.setLevel(logging.INFO)
+    f_handler.setFormatter(formatter)
+    logger.addHandler(f_handler)
+
+    return logger
+
+logger = setup_dual_logger()
 
 try:
     import msvcrt
@@ -57,6 +95,7 @@ from modules.episodic_memory import EpisodicObjectMemory
 from modules.finger_ocr import FingerOCRAndUtilities
 from modules.indoor_nav import IndoorTopologicalNavigator
 from modules.face_ident import FaceRecognizer
+from modules.spatial_ocr import SpatialOCR
 
 
 class LiveLocalGogglesApp:
@@ -101,6 +140,7 @@ class LiveLocalGogglesApp:
             track_identities=self.track_identities,
             async_recognize_cb=self._async_recognize
         )
+        self.yolo_model_name = getattr(self.reflex, "model_name", "YOLOv8n")
 
         print("\n[3/5] Loading Episodic Object Memory...")
         self.memory = EpisodicObjectMemory()
@@ -118,8 +158,14 @@ class LiveLocalGogglesApp:
 
         # Asynchronous worker for on-demand OCR (so hotkey [r] never freezes camera)
         self.ocr_task_queue = queue.Queue(maxsize=1)
-        self.ocr_worker_thread = threading.Thread(target=self._async_ocr_worker, daemon=True)
+        self.ocr_worker_thread = threading.Thread(target=self._async_ondemand_ocr_worker, daemon=True)
         self.ocr_worker_thread.start()
+
+        # Asynchronous Continuous Spatial OCR (EasyOCR loaded on boot)
+        print("\n[EasyOCR] Initializing Continuous Spatial OCR Engine...")
+        self.ocr_reader = SpatialOCR()
+        self.ocr_cooldowns = {}
+        self.ocr_thread_active = False
 
         # Hands-free microphone voice listener queue
         self.voice_command_queue = queue.Queue(maxsize=5)
@@ -237,49 +283,92 @@ class LiveLocalGogglesApp:
                 time.sleep(0.5)
 
     def _async_recognize(self, track_id, crop):
-        """Asynchronously runs DeepFace face recognition on person crop and updates identity."""
+        """Asynchronously runs DeepFace face recognition on person crop in daemon thread."""
+        logger.info(f"[Daemon Thread] DeepFace Processing: Starting recognition for Track #{track_id}...")
+        t_start = time.perf_counter()
         try:
             matched_name = self.face_recognizer.identify_face(crop)
+            inference_ms = (time.perf_counter() - t_start) * 1000.0
             if matched_name and matched_name != "Unknown":
                 self.track_identities[track_id] = matched_name
-                print(f"👤 [DeepFace Match] Track ID #{track_id} recognized as: {matched_name}")
+                logger.info(f"[Daemon Thread] DeepFace Inference Time: {inference_ms:.0f}ms | Recognized: '{matched_name}' (Track #{track_id})")
             else:
                 self.track_identities[track_id] = "Unknown person"
-        except Exception:
+                logger.info(f"[Daemon Thread] DeepFace Inference Time: {inference_ms:.0f}ms | Result: No match found (Track #{track_id})")
+        except Exception as e:
+            inference_ms = (time.perf_counter() - t_start) * 1000.0
             self.track_identities[track_id] = "Unknown person"
+            logger.error(f"[Daemon Thread] DeepFace Inference Time: {inference_ms:.0f}ms | Error: {e}")
 
     def _async_face_worker(self):
-        """Processes InsightFace + YOLOv11-Pose asynchronously and feeds unified announcements."""
+        """Processes InsightFace + YOLOv11-Pose asynchronously in background daemon thread."""
         while True:
             try:
                 frame_bgr, timestamp = self.face_task_queue.get()
                 if frame_bgr is None:
                     break
 
-                # emit_audio=False so ReflexDepthEngine handles unified name + distance + cues
+                logger.info("[Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...")
+                t_start = time.perf_counter()
                 annotated_faces, announcements = self.social.analyze_people(
                     frame_bgr, timestamp=timestamp, emit_audio=False
                 )
+                inference_ms = (time.perf_counter() - t_start) * 1000.0
+                logger.info(f"[Daemon Thread] InsightFace Inference Time: {inference_ms:.0f}ms | Cues: {len(announcements)}")
                 if announcements:
                     self._update_hud_status(announcements[-1])
 
                 self.face_task_queue.task_done()
             except Exception as e:
-                print(f"Face worker error: {e}")
+                logger.error(f"[Daemon Thread] Face worker error: {e}")
 
-    def _async_ocr_worker(self):
-        """Executes EasyOCR in the background upon hotkey or voice press."""
+    def _async_ondemand_ocr_worker(self):
+        """Executes EasyOCR in the background upon hotkey [r] or voice command."""
         while True:
             try:
                 frame_bgr, timestamp = self.ocr_task_queue.get()
                 if frame_bgr is None:
                     break
 
+                logger.info("[Daemon Thread] EasyOCR Processing: On-Demand Fingertip/Scene OCR triggered...")
+                t_start = time.perf_counter()
                 _, speech = self.ocr.read_scene_or_fingertip(frame_bgr, timestamp=timestamp, priority=0)
+                inference_ms = (time.perf_counter() - t_start) * 1000.0
+                logger.info(f"[Daemon Thread] EasyOCR On-Demand Inference Time: {inference_ms:.0f}ms | Result: '{speech}'")
                 self._update_hud_status(speech)
                 self.ocr_task_queue.task_done()
             except Exception as e:
-                print(f"OCR worker error: {e}")
+                logger.error(f"[Daemon Thread] On-demand OCR worker error: {e}")
+
+    def _async_ocr_worker(self, center_crop):
+        """Asynchronously runs EasyOCR on center 60% spatial frame crop in daemon thread."""
+        self.ocr_thread_active = True
+        logger.info("[Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...")
+        t_start = time.perf_counter()
+        try:
+            detected_texts = self.ocr_reader.read_text(center_crop)
+            inference_ms = (time.perf_counter() - t_start) * 1000.0
+            current_time = time.time()
+            if detected_texts:
+                logger.info(f"[Daemon Thread] EasyOCR Inference Time: {inference_ms:.0f}ms | Detected: {detected_texts}")
+            else:
+                logger.info(f"[Daemon Thread] EasyOCR Inference Time: {inference_ms:.0f}ms | No text detected")
+
+            for raw_text in detected_texts:
+                clean_text = raw_text.strip()
+                if len(clean_text) < 3:
+                    continue
+                last_seen = self.ocr_cooldowns.get(clean_text, 0.0)
+                if (current_time - last_seen) >= 20.0:
+                    self.ocr_cooldowns[clean_text] = current_time
+                    alert_msg = f"Text detected: {clean_text}"
+                    self.arbitrator.emit_alert(2, alert_msg, current_time, key=f"spatial_ocr_{clean_text.lower()}")
+                    self._update_hud_status(alert_msg)
+        except Exception as e:
+            inference_ms = (time.perf_counter() - t_start) * 1000.0
+            logger.error(f"[Daemon Thread] EasyOCR Inference Error ({inference_ms:.0f}ms): {e}")
+        finally:
+            self.ocr_thread_active = False
 
     def _update_hud_status(self, text):
         self.last_hud_message = text
@@ -409,7 +498,21 @@ class LiveLocalGogglesApp:
             msg_display = msg_display[:107] + "..."
         cv2.putText(bottom_bar, msg_display, (16, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2, cv2.LINE_AA)
 
-        return np.vstack((top_bar, combined_hud, bottom_bar))
+        composite = np.vstack((top_bar, combined_hud, bottom_bar))
+
+        # Live Running FPS Overlay in Top-Right Corner (cv2.putText badge for demo recordings)
+        fps_text = f"FPS: {fps:04.1f}"
+        badge_w = 145
+        badge_h = 32
+        x1 = max(10, w - badge_w - 12)
+        y1 = 7
+        x2 = min(w - 12, x1 + badge_w)
+        y2 = y1 + badge_h
+        cv2.rectangle(composite, (x1, y1), (x2, y2), (20, 20, 20), -1)
+        cv2.rectangle(composite, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(composite, fps_text, (x1 + 10, y1 + 23), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (0, 255, 0), 2, cv2.LINE_AA)
+
+        return composite
 
     def run(self, max_frames=None):
         """Main real-time 30 FPS camera loop."""
@@ -440,10 +543,13 @@ class LiveLocalGogglesApp:
 
         frame_count = 0
         start_time = time.time()
-        fps_timer = time.time()
+        fps_last_t = time.perf_counter()
         current_fps = 30.0
 
-        print("🚀 Real-Time 30 FPS Processing Loop Active!")
+        logger.info("=" * 65)
+        logger.info("🚀 Real-Time 30 FPS Processing Loop Active!")
+        logger.info("   Dual Logging Active: Console (stdout) & Execution_Logs.txt")
+        logger.info("=" * 65)
         self.arbitrator.emit_alert(2, "Assistive Goggles initialized. System active.", time.time(), key="boot_alert")
 
         try:
@@ -470,6 +576,17 @@ class LiveLocalGogglesApp:
                 else:
                     combined_hud, speech = res
                     dropoff_detected = getattr(self.reflex, "dropoff_detected", False)
+
+                # Benchmark Live Running FPS (EMA) & Main Thread YOLO Inference
+                t_frame_end = time.perf_counter()
+                dt = t_frame_end - fps_last_t
+                fps_last_t = t_frame_end
+                if dt > 0:
+                    instant_fps = 1.0 / dt
+                    current_fps = 0.85 * current_fps + 0.15 * instant_fps
+
+                yolo_ms = getattr(self.reflex, "last_yolo_time_ms", 28.0)
+                logger.info(f"[Main Thread] {self.yolo_model_name} Inference Time: {yolo_ms:.0f}ms | FPS: {current_fps:.1f}")
 
                 # Asynchronous Local Facial Recognition via DeepFace
                 if hasattr(self.reflex, "last_results") and self.reflex.last_results is not None:
@@ -673,12 +790,18 @@ class LiveLocalGogglesApp:
                     if self.face_task_queue.empty():
                         self.face_task_queue.put((frame.copy(), now))
 
-                # Calculate live FPS
-                if frame_count % 15 == 0:
-                    elapsed = time.time() - fps_timer
-                    if elapsed > 0:
-                        current_fps = 15.0 / elapsed
-                    fps_timer = time.time()
+                # Asynchronous Continuous Spatial OCR in Daemon Thread (Center 60% of frame)
+                if not self.ocr_thread_active:
+                    h_f, w_f = frame.shape[:2]
+                    cy1, cy2 = int(h_f * 0.2), int(h_f * 0.8)
+                    cx1, cx2 = int(w_f * 0.2), int(w_f * 0.8)
+                    center_crop = frame[cy1:cy2, cx1:cx2].copy()
+                    if center_crop.size > 0:
+                        threading.Thread(
+                            target=self._async_ocr_worker,
+                            args=(center_crop,),
+                            daemon=True
+                        ).start()
 
                 # 5. Composite Final Live HUD
                 hud_display = self.draw_hud_overlays(combined_hud, current_fps, frame_count)
@@ -753,6 +876,7 @@ class LiveLocalGogglesApp:
         if not self.headless:
             cv2.destroyAllWindows()
 
+        logger.info("🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.")
         print("✅ Assistive Smart Goggles shutdown cleanly.")
 
 

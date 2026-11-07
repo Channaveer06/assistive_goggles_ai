@@ -250,6 +250,11 @@ class PriorityAudioArbitrator:
         log_entry = f"[{current_time:05.2f}s | P{priority}] [AUDIO] \"{message}\""
         self.spoken_log.append((current_time, priority, message))
         try:
+            import logging
+            logging.getLogger("AssistiveGoggles").info(f"[Audio Arbitrator] Priority {priority} Alert: \"{message}\"")
+        except Exception:
+            pass
+        try:
             print(log_entry)
         except UnicodeEncodeError:
             print(log_entry.encode("ascii", errors="replace").decode("ascii"))

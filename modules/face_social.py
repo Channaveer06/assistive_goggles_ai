@@ -1,4 +1,5 @@
 import os
+import time
 import cv2
 import numpy as np
 from collections import defaultdict, deque
@@ -18,6 +19,7 @@ class FaceAndSocialEngine:
     """
     def __init__(self, arbitrator):
         self.arbitrator = arbitrator
+        self.last_inference_time_ms = 0.0
         os.makedirs(CHROMA_DIR, exist_ok=True)
 
         print("Loading InsightFace (buffalo_l 512-D ArcFace) & ChromaDB Vector Store...")
@@ -129,10 +131,12 @@ class FaceAndSocialEngine:
         """
         Runs InsightFace + 3-Frame Voting Gate + Social Micro-Cues and updates verified face tracks.
         """
+        t0 = time.perf_counter()
         h, w = frame_bgr.shape[:2]
         annotated = frame_bgr.copy()
         faces = self.face_app.get(frame_bgr)
         pose_cues = self.detect_social_cues(frame_bgr)
+        self.last_inference_time_ms = (time.perf_counter() - t0) * 1000.0
         announcements = []
         self.latest_face_tracks = []
 

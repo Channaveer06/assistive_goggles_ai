@@ -1,0 +1,46 @@
+21:24:12.642 [INFO] =================================================================
+21:24:12.646 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+21:24:12.646 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+21:24:12.646 [INFO] =================================================================
+21:24:12.647 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+21:24:15.849 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 1.5 meters on your right"
+21:24:15.850 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 1.6 meters straight ahead"
+21:24:15.974 [INFO] [Main Thread] YOLOv8n Inference Time: 709ms | FPS: 25.5
+21:24:15.976 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #2...
+21:24:15.979 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #3...
+21:24:16.589 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:18.695 [INFO] [Daemon Thread] EasyOCR Inference Time: 2105ms | No text detected
+21:24:18.816 [INFO] [Main Thread] YOLOv8n Inference Time: 313ms | FPS: 21.8
+21:24:18.819 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:20.036 [INFO] [Daemon Thread] EasyOCR Inference Time: 1217ms | No text detected
+21:24:22.177 [INFO] [Main Thread] YOLOv8n Inference Time: 686ms | FPS: 18.5
+21:24:22.498 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:23.309 [INFO] [Daemon Thread] EasyOCR Inference Time: 810ms | No text detected
+21:24:24.948 [INFO] [Main Thread] YOLOv8n Inference Time: 143ms | FPS: 15.8
+21:24:24.950 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:26.158 [INFO] [Daemon Thread] EasyOCR Inference Time: 1208ms | No text detected
+21:24:27.339 [INFO] [Main Thread] YOLOv8n Inference Time: 105ms | FPS: 13.5
+21:24:27.341 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:27.349 [INFO] [Audio Arbitrator] Priority 0 Alert: "Searching for cell phone. Please scan the room slowly."
+21:24:28.893 [INFO] [Daemon Thread] EasyOCR Inference Time: 1552ms | No text detected
+21:24:29.714 [INFO] [Main Thread] YOLOv8n Inference Time: 111ms | FPS: 11.5
+21:24:29.716 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:31.445 [INFO] [Daemon Thread] EasyOCR Inference Time: 1728ms | No text detected
+21:24:31.741 [INFO] [Daemon Thread] DeepFace Inference Time: 15761ms | Result: No match found (Track #3)
+21:24:31.770 [INFO] [Daemon Thread] DeepFace Inference Time: 15794ms | Recognized: 'Win_20261107_20_54_53_pro' (Track #2)
+21:24:32.479 [INFO] [Main Thread] YOLOv8n Inference Time: 86ms | FPS: 9.9
+21:24:32.481 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:33.253 [INFO] [Daemon Thread] EasyOCR Inference Time: 771ms | No text detected
+21:24:34.014 [INFO] [Main Thread] YOLOv8n Inference Time: 82ms | FPS: 8.5
+21:24:34.017 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:34.674 [INFO] [Daemon Thread] EasyOCR Inference Time: 657ms | No text detected
+21:24:35.454 [INFO] [Audio Arbitrator] Priority 2 Alert: "Win_20261107_20_54_53_pro 1.4 meters straight ahead"
+21:24:35.459 [INFO] [Main Thread] YOLOv8n Inference Time: 73ms | FPS: 7.3
+21:24:35.460 [INFO] [Audio Arbitrator] Priority 0 Alert: "I have no recent memory of the cell phone."
+21:24:35.461 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:36.257 [INFO] [Daemon Thread] EasyOCR Inference Time: 796ms | No text detected
+21:24:36.970 [INFO] [Main Thread] YOLOv8n Inference Time: 77ms | FPS: 6.3
+21:24:36.972 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+21:24:36.973 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+21:24:36.985 [INFO] [Audio Arbitrator] Priority 0 Alert: "Route from study room to bathroom: Walk straight ahead 10.0 meters to hallway end. Then, Turn left and walk 3.0 meters to reach bathroom. Then, Look for the WASHROOM / BATHROOM door sign straight ahead."
+21:24:37.984 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.

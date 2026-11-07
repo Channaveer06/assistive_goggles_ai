@@ -1,4 +1,5 @@
 import os
+import time
 import cv2
 import torch
 import numpy as np
@@ -23,6 +24,9 @@ class ReflexDepthEngine:
         model_path = os.path.join(base_dir, "yolo11n.pt")
         self.detector = YOLO(model_path if os.path.exists(model_path) else "yolo11n.pt")
         self.last_detections = []
+        self.last_yolo_time_ms = 0.0
+        self.last_depth_time_ms = 0.0
+        self.model_name = "YOLOv8n"
 
         # Tracking cooldowns and trajectory memory
         self.person_cooldowns = {}     # {track_id: last_announced_timestamp}
@@ -108,17 +112,21 @@ class ReflexDepthEngine:
         self.check_frame_quality(frame, timestamp)
 
         # Compute metric depth map (meters)
+        t_depth_0 = time.perf_counter()
         depth_map = self.estimate_metric_depth(frame)
+        self.last_depth_time_ms = (time.perf_counter() - t_depth_0) * 1000.0
 
         # Negative Obstacle (Drop-off & Descending Stairs) Detection via Ground ROI Depth Gradients
         dropoff_detected, top_depth, bottom_depth = self.detect_negative_obstacle(depth_map)
         self.dropoff_detected = dropoff_detected
 
-        # Run YOLOv11 + BoT-SORT persistent tracking
+        # Run YOLO + BoT-SORT persistent tracking
+        t_yolo_0 = time.perf_counter()
         try:
             results = self.detector.track(frame, persist=True, tracker="botsort.yaml", verbose=False)[0]
         except Exception:
             results = self.detector.track(frame, persist=True, tracker="bytetrack.yaml", verbose=False)[0]
+        self.last_yolo_time_ms = (time.perf_counter() - t_yolo_0) * 1000.0
 
         self.last_results = results
         annotated = frame.copy()

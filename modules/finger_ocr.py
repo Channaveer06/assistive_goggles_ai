@@ -1,3 +1,4 @@
+import time
 import cv2
 import re
 import numpy as np
@@ -14,6 +15,7 @@ class FingerOCRAndUtilities:
     """
     def __init__(self, arbitrator):
         self.arbitrator = arbitrator
+        self.last_inference_time_ms = 0.0
         print("Initializing GPU EasyOCR Engine for Text, Currency & Medicine Reading...")
         self.reader = easyocr.Reader(["en"], gpu=True, verbose=False)
 
@@ -100,7 +102,9 @@ class FingerOCRAndUtilities:
             return annotated, msg
 
         # 3. Run GPU OCR
+        t_ocr_0 = time.perf_counter()
         ocr_results = self.reader.readtext(roi)
+        self.last_inference_time_ms = (time.perf_counter() - t_ocr_0) * 1000.0
         if not ocr_results:
             msg = "No readable text found. Tilt camera slightly."
             self.arbitrator.emit_alert(2, msg, timestamp, key="ocr_empty")

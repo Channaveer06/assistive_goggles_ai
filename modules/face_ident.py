@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import cv2
 import numpy as np
 from deepface import DeepFace
@@ -25,6 +26,7 @@ class FaceRecognizer:
     """
     def __init__(self, db_path=None):
         self.db_path = db_path if db_path is not None else DEFAULT_DB_PATH
+        self.last_inference_time_ms = 0.0
         os.makedirs(self.db_path, exist_ok=True)
 
         _safe_print("[FaceRecognizer] Initializing DeepFace local facial recognition engine...")
@@ -54,12 +56,14 @@ class FaceRecognizer:
             if not has_images:
                 return "Unknown"
 
+            t_start = time.perf_counter()
             results = DeepFace.find(
                 img_path=frame_crop,
                 db_path=self.db_path,
                 enforce_detection=False,
                 silent=True
             )
+            self.last_inference_time_ms = (time.perf_counter() - t_start) * 1000.0
 
             if results and len(results) > 0 and len(results[0]) > 0:
                 matched_path = results[0]["identity"].iloc[0]
