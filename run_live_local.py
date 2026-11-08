@@ -28,6 +28,17 @@ import logging
 import warnings
 import argparse
 import threading
+
+# Auto-detect and switch to project virtual environment (.venv) if current Python lacks dependencies
+venv_py = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv", "Scripts", "python.exe")
+if os.path.exists(venv_py) and os.path.normcase(sys.executable) != os.path.normcase(venv_py):
+    try:
+        import ultralytics
+    except ImportError:
+        import subprocess
+        print(f"🔄 Automatically routing to project virtual environment: {venv_py}")
+        res = subprocess.run([venv_py] + sys.argv)
+        sys.exit(res.returncode)
 import queue
 
 # Silence InsightFace numpy lstsq FutureWarning
