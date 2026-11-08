@@ -16,8 +16,7 @@ class FingerOCRAndUtilities:
     def __init__(self, arbitrator):
         self.arbitrator = arbitrator
         self.last_inference_time_ms = 0.0
-        print("Initializing GPU EasyOCR Engine for Text, Currency & Medicine Reading...")
-        self.reader = easyocr.Reader(["en"], gpu=True, verbose=False)
+        self.reader = None
 
         # Common Indian currency denominations and medicine keywords
         self.currency_patterns = {
@@ -29,6 +28,15 @@ class FingerOCRAndUtilities:
             "10": "10 Rupee note",
         }
         self.medicine_keywords = ["mg", "ml", "tablet", "capsule", "paracetamol", "amoxicillin", "exp", "dosage", "daily"]
+
+    def _ensure_reader(self):
+        """Lazily loads EasyOCR reader on demand when hotkey [r] is first pressed."""
+        if self.reader is None:
+            try:
+                print("Initializing EasyOCR Engine for Text, Currency & Medicine Reading...")
+                self.reader = easyocr.Reader(["en"], gpu=False, verbose=False)
+            except Exception as e:
+                print(f"EasyOCR Reader load notice: {e}")
 
     def check_room_light_and_color(self, frame_bgr, timestamp=0.0, priority=0):
         """Answers 'Is the room light on?' and identifies the dominant color in the center of the camera."""
@@ -101,9 +109,22 @@ class FingerOCRAndUtilities:
             self.arbitrator.emit_alert(2, msg, timestamp, key="ocr_blur")
             return annotated, msg
 
-        # 3. Run GPU OCR
+        # 3. Run GPU OCR with GIL yielding and resolution optimization
+        self._ensure_reader()
         t_ocr_0 = time.perf_counter()
-        ocr_results = self.reader.readtext(roi)
+        time.sleep(0.01)  # Yield GIL before OCR inference
+        roi_h, roi_w = roi.shape[:2]
+        if roi_w > 480:
+            scale = 480.0 / roi_w
+            small_roi = cv2.resize(roi, (480, int(roi_h * scale)))
+            ocr_results_raw = self.reader.readtext(small_roi)
+            ocr_results = []
+            for bbox, text, conf in ocr_results_raw:
+                orig_bbox = [[int(pt[0] / scale), int(pt[1] / scale)] for pt in bbox]
+                ocr_results.append((orig_bbox, text, conf))
+        else:
+            ocr_results = self.reader.readtext(roi)
+        time.sleep(0.01)  # Yield GIL after OCR inference
         self.last_inference_time_ms = (time.perf_counter() - t_ocr_0) * 1000.0
         if not ocr_results:
             msg = "No readable text found. Tilt camera slightly."

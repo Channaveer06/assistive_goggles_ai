@@ -23,8 +23,8 @@ class FaceAndSocialEngine:
         os.makedirs(CHROMA_DIR, exist_ok=True)
 
         print("Loading InsightFace (buffalo_l 512-D ArcFace) & ChromaDB Vector Store...")
-        self.face_app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
-        self.face_app.prepare(ctx_id=0, det_size=(640, 640))
+        self.face_app = FaceAnalysis(name="buffalo_l", allowed_modules=["detection", "recognition"], providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+        self.face_app.prepare(ctx_id=0, det_size=(320, 320))
 
         # Persistent ChromaDB on Google Drive
         self.chroma_client = chromadb.PersistentClient(path=CHROMA_DIR)
@@ -33,10 +33,21 @@ class FaceAndSocialEngine:
             metadata={"hnsw:space": "cosine"}
         )
 
+        # Warm up InsightFace ONNX models in RAM to eliminate live first-frame latency
+        dummy_face = np.zeros((240, 320, 3), dtype=np.uint8)
+        try:
+            self.face_app.get(dummy_face)
+        except Exception:
+            pass
+
         # Load YOLOv11-Nano Pose for fast GPU Eye-Contact, Wave, and Handshake cues
         print("Loading YOLOv11-Pose for Social Micro-Cues (Gaze, Wave, Handshake)...")
         pose_model_path = os.path.join(BASE_DIR, "yolo11n-pose.pt")
         self.pose_model = YOLO(pose_model_path if os.path.exists(pose_model_path) else "yolo11n-pose.pt")
+        try:
+            self.pose_model(dummy_face, imgsz=192, verbose=False)
+        except Exception:
+            pass
 
         # 3-Frame Voting Buffers per track/person slot
         self.vote_history = defaultdict(lambda: deque(maxlen=3))
@@ -94,7 +105,9 @@ class FaceAndSocialEngine:
         - Hand wave (wrist raised above shoulder/neck level)
         - Handshake offer (forearm extended horizontally toward camera center)
         """
-        pose_results = self.pose_model(frame_bgr, verbose=False)[0]
+        time.sleep(0.005)  # Yield GIL
+        pose_results = self.pose_model(frame_bgr, imgsz=192, verbose=False)[0]
+        time.sleep(0.005)  # Yield GIL
         cues_by_box = []
 
         if pose_results.keypoints is None or len(pose_results.keypoints) == 0:
@@ -134,14 +147,25 @@ class FaceAndSocialEngine:
         t0 = time.perf_counter()
         h, w = frame_bgr.shape[:2]
         annotated = frame_bgr.copy()
-        faces = self.face_app.get(frame_bgr)
+
+        # Downsample for sub-35ms InsightFace ArcFace inference
+        small_frame = cv2.resize(frame_bgr, (320, 240))
+        scale_x = w / 320.0
+        scale_y = h / 240.0
+
+        time.sleep(0.005)  # Yield GIL before InsightFace detection
+        faces = self.face_app.get(small_frame)
+        time.sleep(0.005)  # Yield GIL after InsightFace detection
         pose_cues = self.detect_social_cues(frame_bgr)
         self.last_inference_time_ms = (time.perf_counter() - t0) * 1000.0
         announcements = []
         self.latest_face_tracks = []
 
         for idx, face in enumerate(faces):
-            x1, y1, x2, y2 = map(int, face.bbox)
+            x1 = int(face.bbox[0] * scale_x)
+            y1 = int(face.bbox[1] * scale_y)
+            x2 = int(face.bbox[2] * scale_x)
+            y2 = int(face.bbox[3] * scale_y)
             face_w, face_h = x2 - x1, y2 - y1
 
             # Quality gate: Ignore tiny distant background faces (< 40px) to guarantee zero false alarms

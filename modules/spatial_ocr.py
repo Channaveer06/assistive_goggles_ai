@@ -13,19 +13,19 @@ class SpatialOCR:
     """
     def __init__(self, languages=None, gpu=None):
         self.last_inference_time_ms = 0.0
-        if languages is None:
-            languages = ["en"]
-        if gpu is None:
-            gpu = torch.cuda.is_available()
+        self.languages = languages if languages is not None else ["en"]
+        self.gpu = gpu if gpu is not None else torch.cuda.is_available()
+        self.reader = None
 
-        try:
-            print(f"[SpatialOCR] Initializing EasyOCR Spatial Text Engine (gpu={gpu})...")
-            self.reader = easyocr.Reader(languages, gpu=gpu, verbose=False)
-            print("[SpatialOCR] EasyOCR Reader initialized successfully.")
-        except Exception as e:
-            print(f"[SpatialOCR] Notice: Initialization with gpu={gpu} failed ({e}). Falling back to CPU...")
-            self.reader = easyocr.Reader(languages, gpu=False, verbose=False)
-            print("[SpatialOCR] EasyOCR Reader initialized on CPU.")
+    def _ensure_reader(self):
+        """Lazily initializes EasyOCR reader only if fallback execution is needed."""
+        if self.reader is None:
+            try:
+                print(f"[SpatialOCR] Lazily initializing EasyOCR fallback engine (gpu={self.gpu})...")
+                self.reader = easyocr.Reader(self.languages, gpu=self.gpu, verbose=False)
+            except Exception as e:
+                print(f"[SpatialOCR] CPU fallback for EasyOCR ({e})...")
+                self.reader = easyocr.Reader(self.languages, gpu=False, verbose=False)
 
     def read_text(self, frame_crop):
         """
@@ -35,9 +35,12 @@ class SpatialOCR:
         if frame_crop is None or not isinstance(frame_crop, np.ndarray) or frame_crop.size == 0:
             return []
 
+        self._ensure_reader()
         try:
             t0 = time.perf_counter()
+            time.sleep(0.01)  # Forcefully yield Python GIL to main YOLO thread
             results = self.reader.readtext(frame_crop)
+            time.sleep(0.01)  # Yield GIL after CPU-heavy inference
             self.last_inference_time_ms = (time.perf_counter() - t0) * 1000.0
             detected_texts = [
                 text for (bbox, text, prob) in results

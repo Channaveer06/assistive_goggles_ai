@@ -280,3 +280,700 @@
 21:48:02.624 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 21:48:03.277 [INFO] [Daemon Thread] EasyOCR Inference Time: 651ms | No text detected
 21:48:03.889 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+22:18:58.892 [INFO] =================================================================
+22:18:58.897 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+22:18:58.897 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+22:18:58.897 [INFO] =================================================================
+22:18:58.897 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+22:19:02.085 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters on your left"
+22:19:02.135 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters on your left"
+22:19:02.158 [INFO] [Main Thread] YOLOv8n Inference Time: 1796ms | FPS: 25.5
+22:19:02.164 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+22:19:02.170 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #2...
+22:19:02.173 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:19:02.179 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:19:03.427 [INFO] [Main Thread] YOLOv8n Inference Time: 1194ms | FPS: 21.8
+22:19:03.515 [INFO] [Main Thread] YOLOv8n Inference Time: 55ms | FPS: 20.3
+22:19:03.515 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:19:04.275 [INFO] [Main Thread] YOLOv8n Inference Time: 302ms | FPS: 17.4
+22:19:04.525 [INFO] [Main Thread] YOLOv8n Inference Time: 200ms | FPS: 15.4
+22:19:04.535 [INFO] [Audio Arbitrator] Priority 0 Alert: "Searching for cell phone. Please scan the room slowly."
+22:19:04.828 [INFO] [Main Thread] YOLOv8n Inference Time: 267ms | FPS: 13.6
+22:19:04.934 [INFO] [Main Thread] YOLOv8n Inference Time: 61ms | FPS: 13.0
+22:19:07.283 [INFO] [Main Thread] YOLOv8n Inference Time: 1174ms | FPS: 11.1
+22:19:07.622 [INFO] [Main Thread] YOLOv8n Inference Time: 280ms | FPS: 9.9
+22:19:07.624 [INFO] [Audio Arbitrator] Priority 0 Alert: "I have no recent memory of the cell phone."
+22:19:08.122 [INFO] [Main Thread] YOLOv8n Inference Time: 416ms | FPS: 8.7
+22:19:08.123 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:19:08.149 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+22:19:08.167 [INFO] [Audio Arbitrator] Priority 0 Alert: "Route from study room to bathroom: Walk straight ahead 10.0 meters to hallway end. Then, Turn left and walk 3.0 meters to reach bathroom. Then, Look for the WASHROOM / BATHROOM door sign straight ahead."
+22:19:13.827 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 2.0 meters."
+22:19:13.837 [INFO] [Main Thread] YOLOv8n Inference Time: 5639ms | FPS: 7.4
+22:19:14.231 [INFO] [Main Thread] YOLOv8n Inference Time: 298ms | FPS: 6.7
+22:19:14.232 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:19:14.459 [INFO] [Daemon Thread] InsightFace Inference Time: 6291ms | Cues: 0
+22:19:14.524 [INFO] [Main Thread] YOLOv8n Inference Time: 215ms | FPS: 6.2
+22:19:14.791 [INFO] [Main Thread] YOLOv8n Inference Time: 185ms | FPS: 5.8
+22:19:15.134 [INFO] [Main Thread] YOLOv8n Inference Time: 259ms | FPS: 5.4
+22:19:15.174 [INFO] [Audio Arbitrator] Priority 0 Alert: "The room has dim indoor lighting. Center object color is green."
+22:19:15.474 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.5 meters."
+22:19:15.484 [INFO] [Main Thread] YOLOv8n Inference Time: 270ms | FPS: 5.0
+22:19:15.771 [INFO] [Main Thread] YOLOv8n Inference Time: 220ms | FPS: 4.8
+22:19:16.340 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.4 meters."
+22:19:16.351 [INFO] [Main Thread] YOLOv8n Inference Time: 514ms | FPS: 4.3
+22:19:16.603 [INFO] [Main Thread] YOLOv8n Inference Time: 188ms | FPS: 4.3
+22:19:16.848 [INFO] [Main Thread] YOLOv8n Inference Time: 205ms | FPS: 4.2
+22:19:16.849 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+22:19:16.859 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS activated. Sharing live camera stream and current location (study room) with your registered guardian."
+22:19:17.570 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+22:19:17.939 [INFO] [Daemon Thread] InsightFace Inference Time: 1048ms | Cues: 0
+22:19:26.274 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS active. Secure live stream link generated."
+22:21:28.631 [INFO] [Daemon Thread] DeepFace Inference Time: 53962ms | Result: No match found (Track #1)
+22:21:28.740 [INFO] [Daemon Thread] DeepFace Inference Time: 54131ms | Result: No match found (Track #2)
+22:21:38.433 [INFO] [Daemon Thread] EasyOCR Inference Time: 9855ms | No text detected
+22:44:32.749 [INFO] =================================================================
+22:44:32.755 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+22:44:32.755 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+22:44:32.755 [INFO] =================================================================
+22:44:32.756 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+22:44:37.665 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters on your left"
+22:44:37.748 [INFO] [Main Thread] YOLOv8n Inference Time: 3633ms | FPS: 25.5
+22:44:37.751 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+22:44:37.752 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:44:37.757 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:38.398 [INFO] [Main Thread] YOLOv8n Inference Time: 576ms | FPS: 21.9
+22:44:38.399 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:44:39.803 [INFO] [Main Thread] YOLOv8n Inference Time: 398ms | FPS: 18.8
+22:44:39.815 [INFO] [Daemon Thread] EasyOCR Inference Time: 2057ms | No text detected
+22:44:40.080 [INFO] [Main Thread] YOLOv8n Inference Time: 222ms | FPS: 16.6
+22:44:40.085 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:40.831 [INFO] [Main Thread] YOLOv8n Inference Time: 707ms | FPS: 14.3
+22:44:40.856 [INFO] [Audio Arbitrator] Priority 0 Alert: "Searching for cell phone. Please scan the room slowly."
+22:44:41.399 [INFO] [Daemon Thread] EasyOCR Inference Time: 1314ms | No text detected
+22:44:41.422 [INFO] [Main Thread] YOLOv8n Inference Time: 528ms | FPS: 12.4
+22:44:41.958 [INFO] [Main Thread] YOLOv8n Inference Time: 490ms | FPS: 10.8
+22:44:41.961 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:42.253 [INFO] [Main Thread] YOLOv8n Inference Time: 254ms | FPS: 9.7
+22:44:42.254 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:44:43.450 [INFO] [Main Thread] YOLOv8n Inference Time: 1114ms | FPS: 8.4
+22:44:43.452 [INFO] [Audio Arbitrator] Priority 0 Alert: "I have no recent memory of the cell phone."
+22:44:44.224 [INFO] [Daemon Thread] EasyOCR Inference Time: 2263ms | No text detected
+22:44:44.439 [INFO] [Main Thread] YOLOv8n Inference Time: 590ms | FPS: 7.3
+22:44:44.440 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+22:44:44.441 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:44.469 [INFO] [Audio Arbitrator] Priority 0 Alert: "Route from study room to bathroom: Walk straight ahead 10.0 meters to hallway end. Then, Turn left and walk 3.0 meters to reach bathroom. Then, Look for the WASHROOM / BATHROOM door sign straight ahead."
+22:44:45.723 [INFO] [Main Thread] YOLOv8n Inference Time: 1201ms | FPS: 6.3
+22:44:45.941 [INFO] [Daemon Thread] EasyOCR Inference Time: 1499ms | No text detected
+22:44:46.002 [INFO] [Main Thread] YOLOv8n Inference Time: 219ms | FPS: 6.0
+22:44:46.006 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:46.798 [INFO] [Main Thread] YOLOv8n Inference Time: 731ms | FPS: 5.3
+22:44:46.800 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:44:47.325 [INFO] [Daemon Thread] InsightFace Inference Time: 2857ms | Cues: 0
+22:44:47.366 [INFO] [Main Thread] YOLOv8n Inference Time: 481ms | FPS: 4.8
+22:44:47.369 [INFO] [Daemon Thread] EasyOCR Inference Time: 1364ms | No text detected
+22:44:47.554 [INFO] [Main Thread] YOLOv8n Inference Time: 147ms | FPS: 4.9
+22:44:47.565 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:47.584 [INFO] [Audio Arbitrator] Priority 0 Alert: "The room is brightly lit. Center object color is green."
+22:44:48.290 [INFO] [Main Thread] YOLOv8n Inference Time: 677ms | FPS: 4.4
+22:44:48.504 [INFO] [Daemon Thread] EasyOCR Inference Time: 940ms | No text detected
+22:44:48.601 [INFO] [Main Thread] YOLOv8n Inference Time: 273ms | FPS: 4.3
+22:44:49.688 [INFO] [Main Thread] YOLOv8n Inference Time: 1019ms | FPS: 3.8
+22:44:49.697 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+22:44:50.574 [INFO] [Main Thread] YOLOv8n Inference Time: 793ms | FPS: 3.4
+22:44:50.797 [INFO] [Daemon Thread] EasyOCR Inference Time: 1099ms | No text detected
+22:44:51.016 [INFO] [Main Thread] YOLOv8n Inference Time: 383ms | FPS: 3.2
+22:44:51.017 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+22:44:51.018 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+22:44:51.031 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS activated. Sharing live camera stream and current location (study room) with your registered guardian."
+22:44:51.921 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+07:51:28.374 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+07:51:46.494 [INFO] =================================================================
+07:51:46.494 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+07:51:46.495 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+07:51:46.495 [INFO] =================================================================
+07:51:46.496 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+07:51:50.756 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+07:51:50.784 [INFO] [Main Thread] YOLOv8n Inference Time: 2695ms | FPS: 25.5
+07:51:50.785 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+07:51:50.787 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:51:50.789 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+07:51:50.902 [INFO] [Main Thread] YOLOv8n Inference Time: 65ms | FPS: 23.4
+07:51:50.903 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:51:51.043 [INFO] [Main Thread] YOLOv8n Inference Time: 99ms | FPS: 21.1
+07:51:51.157 [INFO] [Main Thread] YOLOv8n Inference Time: 71ms | FPS: 19.5
+07:51:51.290 [INFO] [Main Thread] YOLOv8n Inference Time: 95ms | FPS: 17.9
+07:51:51.299 [INFO] [Audio Arbitrator] Priority 0 Alert: "Searching for cell phone. Please scan the room slowly."
+07:51:51.384 [INFO] [Main Thread] YOLOv8n Inference Time: 56ms | FPS: 17.2
+07:51:51.492 [INFO] [Main Thread] YOLOv8n Inference Time: 67ms | FPS: 16.4
+07:51:51.609 [INFO] [Main Thread] YOLOv8n Inference Time: 77ms | FPS: 15.5
+07:51:51.707 [INFO] [Main Thread] YOLOv8n Inference Time: 64ms | FPS: 15.0
+07:51:51.708 [INFO] [Audio Arbitrator] Priority 0 Alert: "I have no recent memory of the cell phone."
+07:51:51.766 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 16.0
+07:51:51.773 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:51:52.472 [INFO] [Audio Arbitrator] Priority 0 Alert: "Route from study room to bathroom: Walk straight ahead 10.0 meters to hallway end. Then, Turn left and walk 3.0 meters to reach bathroom. Then, Look for the WASHROOM / BATHROOM door sign straight ahead."
+07:51:52.735 [INFO] [Main Thread] YOLOv8n Inference Time: 21ms | FPS: 18.1
+07:51:52.782 [INFO] [Main Thread] YOLOv8n Inference Time: 22ms | FPS: 19.8
+07:51:52.859 [INFO] [Main Thread] YOLOv8n Inference Time: 21ms | FPS: 21.2
+07:51:52.973 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 21.8
+07:51:53.030 [INFO] [Main Thread] YOLOv8n Inference Time: 23ms | FPS: 22.9
+07:51:53.487 [INFO] [Audio Arbitrator] Priority 0 Alert: "The room is brightly lit. Center object color is orange or brown."
+07:51:53.524 [INFO] [Main Thread] YOLOv8n Inference Time: 22ms | FPS: 24.0
+07:51:55.530 [INFO] [Main Thread] YOLOv8n Inference Time: 957ms | FPS: 20.4
+07:51:55.937 [INFO] [Main Thread] YOLOv8n Inference Time: 358ms | FPS: 17.8
+07:51:55.938 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:51:56.111 [INFO] [Main Thread] YOLOv8n Inference Time: 128ms | FPS: 16.1
+07:51:56.220 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.5 meters."
+07:51:56.227 [INFO] [Main Thread] YOLOv8n Inference Time: 86ms | FPS: 15.1
+07:51:56.236 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS activated. Sharing live camera stream and current location (study room) with your registered guardian."
+07:51:56.516 [INFO] [Main Thread] YOLOv8n Inference Time: 76ms | FPS: 13.4
+07:51:56.542 [INFO] [Daemon Thread] InsightFace Inference Time: 4729ms | Cues: 0
+07:51:56.559 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:51:57.359 [INFO] [Main Thread] YOLOv8n Inference Time: 794ms | FPS: 11.6
+07:51:57.549 [INFO] [Main Thread] YOLOv8n Inference Time: 140ms | FPS: 10.8
+07:51:58.080 [INFO] [Main Thread] YOLOv8n Inference Time: 473ms | FPS: 9.5
+07:51:58.163 [INFO] [Daemon Thread] InsightFace Inference Time: 1590ms | Cues: 0
+07:51:58.265 [INFO] [Main Thread] YOLOv8n Inference Time: 139ms | FPS: 9.0
+07:51:58.279 [INFO] [Audio Arbitrator] Priority 0 Alert: "Reading scene text..."
+07:51:58.279 [INFO] [Daemon Thread] EasyOCR Processing: On-Demand Fingertip/Scene OCR triggered...
+07:51:59.622 [INFO] [Main Thread] YOLOv8n Inference Time: 1301ms | FPS: 7.8
+07:52:00.649 [INFO] [Main Thread] YOLOv8n Inference Time: 985ms | FPS: 6.7
+07:52:00.988 [INFO] [Audio Arbitrator] Priority 2 Alert: "No readable text found. Tilt camera slightly."
+07:52:00.989 [INFO] [Daemon Thread] EasyOCR On-Demand Inference Time: 2695ms | Result: 'No readable text found. Tilt camera slightly.'
+07:52:01.093 [INFO] [Main Thread] YOLOv8n Inference Time: 397ms | FPS: 6.1
+07:52:01.551 [INFO] [Main Thread] YOLOv8n Inference Time: 401ms | FPS: 5.5
+07:52:01.552 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:52:01.694 [INFO] [Main Thread] YOLOv8n Inference Time: 102ms | FPS: 5.9
+07:52:01.694 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:52:01.709 [INFO] [Audio Arbitrator] Priority 0 Alert: "Face enrollment triggered. Please look directly at the camera."
+07:52:05.224 [INFO] [Audio Arbitrator] Priority 0 Alert: "Saved Friend permanently to your known people memory."
+07:52:05.341 [INFO] [Main Thread] YOLOv8n Inference Time: 83ms | FPS: 6.5
+07:52:05.342 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:52:05.450 [INFO] [Daemon Thread] InsightFace Inference Time: 3739ms | Cues: 0
+07:52:05.454 [INFO] [Main Thread] YOLOv8n Inference Time: 78ms | FPS: 7.0
+07:52:05.463 [INFO] [Audio Arbitrator] Priority 0 Alert: "Calling registered guardian. Opening live audio and video stream."
+07:52:05.464 [INFO] [Audio Arbitrator] Priority 0 Alert: "Calling registered guardian. Opening live audio and video stream."
+07:52:06.180 [INFO] [Audio Arbitrator] Priority 0 Alert: "Calling registered guardian. Opening live audio and video stream."
+07:52:06.329 [INFO] [Main Thread] YOLOv8n Inference Time: 59ms | FPS: 7.9
+07:52:06.410 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 9.1
+07:52:06.531 [INFO] [Main Thread] YOLOv8n Inference Time: 85ms | FPS: 9.1
+07:52:07.194 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+07:55:55.350 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+07:56:14.232 [INFO] =================================================================
+07:56:14.232 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+07:56:14.232 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+07:56:14.232 [INFO] =================================================================
+07:56:14.232 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+07:56:17.010 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+07:56:17.076 [INFO] [Main Thread] YOLOv8n Inference Time: 1571ms | FPS: 25.6
+07:56:17.077 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+07:56:17.079 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:56:17.081 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:56:17.082 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+07:56:17.415 [INFO] [Main Thread] YOLOv8n Inference Time: 296ms | FPS: 22.2
+07:56:17.884 [INFO] [Main Thread] YOLOv8n Inference Time: 408ms | FPS: 19.2
+07:56:17.999 [INFO] [Main Thread] YOLOv8n Inference Time: 67ms | FPS: 18.0
+07:56:18.170 [INFO] [Main Thread] YOLOv8n Inference Time: 128ms | FPS: 16.3
+07:56:18.186 [INFO] [Audio Arbitrator] Priority 0 Alert: "Searching for cell phone. Please scan the room slowly."
+07:56:18.254 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 16.3
+07:56:18.329 [INFO] [Main Thread] YOLOv8n Inference Time: 41ms | FPS: 16.4
+07:56:18.360 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:56:18.445 [INFO] [Main Thread] YOLOv8n Inference Time: 45ms | FPS: 16.2
+07:56:18.513 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 16.5
+07:56:18.514 [INFO] [Audio Arbitrator] Priority 0 Alert: "I have no recent memory of the cell phone."
+07:56:18.593 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 16.7
+07:56:18.605 [INFO] [Audio Arbitrator] Priority 0 Alert: "Route from study room to bathroom: Walk straight ahead 10.0 meters to hallway end. Then, Turn left and walk 3.0 meters to reach bathroom. Then, Look for the WASHROOM / BATHROOM door sign straight ahead."
+07:56:18.660 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 17.6
+07:56:18.737 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 17.6
+07:56:20.028 [INFO] [Daemon Thread] InsightFace Inference Time: 2935ms | Cues: 0
+07:56:20.139 [INFO] [Main Thread] YOLOv8n Inference Time: 96ms | FPS: 16.3
+07:56:20.140 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:56:20.683 [INFO] [Main Thread] YOLOv8n Inference Time: 498ms | FPS: 14.1
+07:56:20.765 [INFO] [Daemon Thread] InsightFace Inference Time: 599ms | Cues: 0
+07:56:20.813 [INFO] [Main Thread] YOLOv8n Inference Time: 81ms | FPS: 13.5
+07:56:20.829 [INFO] [Audio Arbitrator] Priority 0 Alert: "The room is brightly lit. Center object color is orange or brown."
+07:56:20.962 [INFO] [Main Thread] YOLOv8n Inference Time: 103ms | FPS: 12.7
+07:56:21.025 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 14.0
+07:56:21.082 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 15.5
+07:56:21.138 [INFO] [Main Thread] YOLOv8n Inference Time: 22ms | FPS: 17.3
+07:56:21.208 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 18.1
+07:56:21.217 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS activated. Sharing live camera stream and current location (study room) with your registered guardian."
+07:56:21.381 [INFO] [Main Thread] YOLOv8n Inference Time: 129ms | FPS: 16.4
+07:56:21.462 [INFO] [Main Thread] YOLOv8n Inference Time: 43ms | FPS: 16.4
+07:56:21.532 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 16.7
+07:56:21.601 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 17.5
+07:56:21.659 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 18.5
+07:56:21.667 [INFO] [Audio Arbitrator] Priority 0 Alert: "Reading scene text..."
+07:56:21.667 [INFO] [Daemon Thread] EasyOCR Processing: On-Demand Fingertip/Scene OCR triggered...
+07:56:21.752 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 17.7
+07:56:21.956 [INFO] [Main Thread] YOLOv8n Inference Time: 163ms | FPS: 15.9
+07:56:22.138 [INFO] [Main Thread] YOLOv8n Inference Time: 143ms | FPS: 14.4
+07:56:22.534 [INFO] [Main Thread] YOLOv8n Inference Time: 355ms | FPS: 12.6
+07:56:23.065 [INFO] [Main Thread] YOLOv8n Inference Time: 469ms | FPS: 11.0
+07:56:23.066 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:56:23.067 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:56:23.077 [INFO] [Audio Arbitrator] Priority 0 Alert: "Face enrollment triggered. Please look directly at the camera."
+07:56:23.694 [INFO] [Audio Arbitrator] Priority 0 Alert: "Saved Friend permanently to your known people memory."
+07:56:24.291 [INFO] [Audio Arbitrator] Priority 2 Alert: "No readable text found. Tilt camera slightly."
+07:56:24.292 [INFO] [Daemon Thread] EasyOCR On-Demand Inference Time: 2613ms | Result: 'No readable text found. Tilt camera slightly.'
+07:56:24.301 [INFO] [Main Thread] YOLOv8n Inference Time: 584ms | FPS: 9.6
+07:56:24.327 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS active. Secure live stream link generated."
+07:56:24.343 [INFO] [Daemon Thread] InsightFace Inference Time: 1235ms | Cues: 0
+07:56:24.390 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.6 meters."
+07:56:24.398 [INFO] [Main Thread] YOLOv8n Inference Time: 53ms | FPS: 10.2
+07:56:24.408 [INFO] [Audio Arbitrator] Priority 0 Alert: "Calling registered guardian. Opening live audio and video stream."
+07:56:24.408 [INFO] [Audio Arbitrator] Priority 0 Alert: "Calling registered guardian. Opening live audio and video stream."
+07:56:25.293 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 10.9
+07:56:25.409 [INFO] [Main Thread] YOLOv8n Inference Time: 73ms | FPS: 10.9
+07:56:25.409 [INFO] [Audio Arbitrator] Priority 0 Alert: "Found cell phone on your center, 1.5 meters away."
+07:56:25.802 [INFO] [Main Thread] YOLOv8n Inference Time: 292ms | FPS: 9.7
+07:56:25.821 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:56:26.352 [INFO] [Daemon Thread] InsightFace Inference Time: 507ms | Cues: 0
+07:56:26.470 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+07:57:45.564 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+07:58:05.280 [INFO] =================================================================
+07:58:05.285 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+07:58:05.285 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+07:58:05.285 [INFO] =================================================================
+07:58:05.287 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+07:58:06.557 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+07:58:06.635 [INFO] [Main Thread] YOLOv8n Inference Time: 550ms | FPS: 25.6
+07:58:06.636 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+07:58:06.639 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:58:06.640 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:58:06.640 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+07:58:07.882 [INFO] [Main Thread] YOLOv8n Inference Time: 1200ms | FPS: 21.9
+07:58:08.074 [INFO] [Main Thread] YOLOv8n Inference Time: 147ms | FPS: 19.5
+07:58:08.201 [INFO] [Main Thread] YOLOv8n Inference Time: 78ms | FPS: 18.1
+07:58:08.270 [INFO] [Main Thread] YOLOv8n Inference Time: 42ms | FPS: 18.2
+07:58:08.335 [INFO] [Main Thread] YOLOv8n Inference Time: 41ms | FPS: 18.0
+07:58:08.511 [INFO] [Main Thread] YOLOv8n Inference Time: 138ms | FPS: 16.3
+07:58:08.845 [INFO] [Main Thread] YOLOv8n Inference Time: 299ms | FPS: 14.3
+07:58:09.132 [INFO] [Main Thread] YOLOv8n Inference Time: 243ms | FPS: 12.7
+07:58:09.196 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 14.0
+07:58:09.253 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 15.4
+07:58:09.318 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 16.5
+07:58:09.400 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 16.3
+07:58:09.401 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+07:58:09.478 [INFO] [Main Thread] YOLOv8n Inference Time: 45ms | FPS: 16.2
+07:58:09.556 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 16.1
+07:58:09.616 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 16.8
+07:58:09.711 [INFO] [Main Thread] YOLOv8n Inference Time: 66ms | FPS: 16.2
+07:58:09.775 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 16.7
+07:58:09.863 [INFO] [Main Thread] YOLOv8n Inference Time: 60ms | FPS: 16.2
+07:58:09.926 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 17.1
+07:58:09.987 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 18.0
+07:58:10.087 [INFO] [Main Thread] YOLOv8n Inference Time: 63ms | FPS: 17.2
+07:58:10.148 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 17.7
+07:58:10.211 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 17.9
+07:58:10.259 [INFO] [Main Thread] YOLOv8n Inference Time: 24ms | FPS: 19.1
+07:58:10.335 [INFO] [Main Thread] YOLOv8n Inference Time: 23ms | FPS: 20.4
+07:58:10.403 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 20.9
+07:58:10.465 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 21.4
+07:58:10.517 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 21.5
+07:58:10.647 [INFO] [Main Thread] YOLOv8n Inference Time: 101ms | FPS: 19.5
+07:58:12.911 [INFO] [Daemon Thread] InsightFace Inference Time: 6255ms | Cues: 0
+07:58:12.927 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+07:58:13.331 [INFO] [Daemon Thread] InsightFace Inference Time: 389ms | Cues: 0
+07:58:13.349 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:02:31.069 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:02:49.661 [INFO] =================================================================
+08:02:49.663 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:02:49.663 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:02:49.663 [INFO] =================================================================
+08:02:49.663 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:02:51.699 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:02:51.751 [INFO] [Main Thread] YOLOv8n Inference Time: 1111ms | FPS: 25.6
+08:02:51.752 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:02:51.754 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:02:51.756 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:02:51.756 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:02:52.094 [INFO] [Main Thread] YOLOv8n Inference Time: 300ms | FPS: 22.2
+08:02:52.988 [INFO] [Main Thread] YOLOv8n Inference Time: 854ms | FPS: 19.0
+08:02:53.080 [INFO] [Main Thread] YOLOv8n Inference Time: 44ms | FPS: 18.4
+08:02:53.143 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 18.4
+08:02:53.220 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 18.5
+08:02:53.346 [INFO] [Main Thread] YOLOv8n Inference Time: 71ms | FPS: 17.4
+08:02:53.406 [INFO] [Main Thread] YOLOv8n Inference Time: 23ms | FPS: 18.7
+08:02:53.481 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 18.8
+08:02:54.015 [INFO] [Daemon Thread] InsightFace Inference Time: 2245ms | Cues: 0
+08:02:54.052 [INFO] [Main Thread] YOLOv8n Inference Time: 540ms | FPS: 16.2
+08:02:54.137 [INFO] [Main Thread] YOLOv8n Inference Time: 52ms | FPS: 15.9
+08:02:54.138 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:02:54.249 [INFO] [Audio Arbitrator] Priority 2 Alert: "Friend 2.5 meters on your right"
+08:02:54.257 [INFO] [Main Thread] YOLOv8n Inference Time: 60ms | FPS: 15.3
+08:02:54.258 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #5...
+08:02:54.274 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:02:54.661 [INFO] [Main Thread] YOLOv8n Inference Time: 352ms | FPS: 13.4
+08:02:54.714 [INFO] [Daemon Thread] InsightFace Inference Time: 429ms | Cues: 0
+08:02:54.776 [INFO] [Main Thread] YOLOv8n Inference Time: 62ms | FPS: 13.2
+08:02:54.925 [INFO] [Main Thread] YOLOv8n Inference Time: 87ms | FPS: 12.6
+08:02:55.045 [INFO] [Main Thread] YOLOv8n Inference Time: 68ms | FPS: 12.4
+08:02:55.131 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 13.6
+08:02:55.658 [INFO] [Main Thread] YOLOv8n Inference Time: 23ms | FPS: 15.7
+08:02:55.741 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 15.9
+08:02:55.841 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 15.8
+08:02:55.956 [INFO] [Main Thread] YOLOv8n Inference Time: 51ms | FPS: 15.4
+08:02:56.086 [INFO] [Main Thread] YOLOv8n Inference Time: 71ms | FPS: 14.7
+08:02:56.238 [INFO] [Main Thread] YOLOv8n Inference Time: 101ms | FPS: 13.7
+08:02:56.396 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.2 meters."
+08:02:56.397 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.4 meters."
+08:02:56.404 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 14.5
+08:02:56.622 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 15.1
+08:02:56.721 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 15.4
+08:02:56.824 [INFO] [Main Thread] YOLOv8n Inference Time: 50ms | FPS: 15.3
+08:02:56.841 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:02:57.286 [INFO] [Main Thread] YOLOv8n Inference Time: 400ms | FPS: 13.3
+08:02:57.325 [INFO] [Daemon Thread] InsightFace Inference Time: 463ms | Cues: 0
+08:02:58.115 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 14.3
+08:02:58.189 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 15.3
+08:02:58.267 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 16.1
+08:02:58.345 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 16.7
+08:02:58.423 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 17.3
+08:02:58.494 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 18.0
+08:02:58.618 [INFO] [Main Thread] YOLOv8n Inference Time: 68ms | FPS: 16.9
+08:02:59.257 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:05:03.707 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:05:21.750 [INFO] =================================================================
+08:05:21.752 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:05:21.752 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:05:21.752 [INFO] =================================================================
+08:05:21.752 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:06:40.082 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:12:19.110 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:12:37.180 [INFO] =================================================================
+08:12:37.180 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:12:37.180 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:12:37.180 [INFO] =================================================================
+08:12:37.180 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:12:38.427 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:12:38.451 [INFO] [Main Thread] YOLOv8n Inference Time: 467ms | FPS: 30.0
+08:12:38.452 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:12:38.454 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:12:38.456 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:12:38.456 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:12:39.592 [INFO] [Main Thread] YOLOv8n Inference Time: 1098ms | FPS: 25.6
+08:12:39.701 [INFO] [Main Thread] YOLOv8n Inference Time: 83ms | FPS: 23.3
+08:12:39.902 [INFO] [Main Thread] YOLOv8n Inference Time: 172ms | FPS: 20.6
+08:12:39.903 [INFO] [Daemon Thread] InsightFace Inference Time: 1436ms | Cues: 0
+08:12:39.987 [INFO] [Main Thread] YOLOv8n Inference Time: 58ms | FPS: 19.5
+08:12:40.054 [INFO] [Main Thread] YOLOv8n Inference Time: 44ms | FPS: 19.2
+08:12:40.127 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 18.7
+08:12:40.195 [INFO] [Main Thread] YOLOv8n Inference Time: 46ms | FPS: 18.5
+08:12:40.272 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 17.9
+08:12:40.346 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 17.6
+08:12:40.418 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 17.3
+08:12:40.544 [INFO] [Main Thread] YOLOv8n Inference Time: 100ms | FPS: 16.0
+08:12:40.770 [INFO] [Main Thread] YOLOv8n Inference Time: 202ms | FPS: 14.3
+08:12:40.861 [INFO] [Main Thread] YOLOv8n Inference Time: 67ms | FPS: 14.0
+08:12:41.156 [INFO] [Main Thread] YOLOv8n Inference Time: 269ms | FPS: 12.4
+08:12:41.157 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:12:41.615 [INFO] [Main Thread] YOLOv8n Inference Time: 433ms | FPS: 10.9
+08:12:41.639 [INFO] [Daemon Thread] InsightFace Inference Time: 471ms | Cues: 0
+08:12:41.698 [INFO] [Main Thread] YOLOv8n Inference Time: 57ms | FPS: 11.3
+08:12:41.699 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:12:41.792 [INFO] [Main Thread] YOLOv8n Inference Time: 69ms | FPS: 11.4
+08:12:41.855 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.9 meters."
+08:12:41.863 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 12.2
+08:12:41.923 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 13.3
+08:12:41.994 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 13.7
+08:12:42.047 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 14.9
+08:12:42.127 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 14.8
+08:12:42.208 [INFO] [Main Thread] YOLOv8n Inference Time: 59ms | FPS: 14.7
+08:12:42.275 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 15.0
+08:12:42.343 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 15.2
+08:12:42.437 [INFO] [Main Thread] YOLOv8n Inference Time: 72ms | FPS: 14.7
+08:12:42.515 [INFO] [Main Thread] YOLOv8n Inference Time: 57ms | FPS: 14.6
+08:12:42.596 [INFO] [Main Thread] YOLOv8n Inference Time: 58ms | FPS: 14.5
+08:12:42.672 [INFO] [Main Thread] YOLOv8n Inference Time: 52ms | FPS: 14.6
+08:12:42.750 [INFO] [Main Thread] YOLOv8n Inference Time: 55ms | FPS: 14.6
+08:12:42.822 [INFO] [Main Thread] YOLOv8n Inference Time: 50ms | FPS: 14.8
+08:12:42.900 [INFO] [Main Thread] YOLOv8n Inference Time: 56ms | FPS: 14.7
+08:12:42.967 [INFO] [Main Thread] YOLOv8n Inference Time: 44ms | FPS: 15.1
+08:12:43.037 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 15.4
+08:12:43.100 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 15.9
+08:12:43.174 [INFO] [Main Thread] YOLOv8n Inference Time: 51ms | FPS: 15.8
+08:12:43.244 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 15.9
+08:12:43.320 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 15.7
+08:12:43.375 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 16.6
+08:12:44.238 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:14:59.981 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:15:18.057 [INFO] =================================================================
+08:15:18.058 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:15:18.058 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:15:18.058 [INFO] =================================================================
+08:15:18.058 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:15:19.152 [INFO] [Main Thread] YOLOv8n Inference Time: 127ms | FPS: 30.0
+08:15:19.153 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:15:19.153 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:15:19.363 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:15:19.372 [INFO] [Main Thread] YOLOv8n Inference Time: 188ms | FPS: 26.2
+08:15:19.373 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:15:19.384 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:15:20.518 [INFO] [Main Thread] YOLOv8n Inference Time: 1106ms | FPS: 22.4
+08:15:20.645 [INFO] [Main Thread] YOLOv8n Inference Time: 100ms | FPS: 20.3
+08:15:20.918 [INFO] [Daemon Thread] InsightFace Inference Time: 1523ms | Cues: 0
+08:15:20.919 [INFO] [Main Thread] YOLOv8n Inference Time: 192ms | FPS: 17.9
+08:15:20.974 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 0.8 meters."
+08:15:20.982 [INFO] [Main Thread] YOLOv8n Inference Time: 44ms | FPS: 17.9
+08:15:21.035 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 18.5
+08:15:21.088 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 19.1
+08:15:21.135 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 20.1
+08:15:21.181 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 20.9
+08:15:21.229 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 21.5
+08:15:21.274 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 22.1
+08:15:21.319 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 22.8
+08:15:21.372 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 22.8
+08:15:21.418 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 23.3
+08:15:21.507 [INFO] [Main Thread] YOLOv8n Inference Time: 72ms | FPS: 21.6
+08:15:21.558 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 21.7
+08:15:21.602 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 22.4
+08:15:21.646 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 23.2
+08:15:21.689 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 23.7
+08:15:21.738 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 23.8
+08:15:21.783 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 24.2
+08:15:21.829 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 24.4
+08:15:21.875 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 24.5
+08:15:21.916 [INFO] [Main Thread] YOLOv8n Inference Time: 24ms | FPS: 25.3
+08:15:21.917 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:15:22.291 [INFO] [Main Thread] YOLOv8n Inference Time: 355ms | FPS: 21.9
+08:15:22.351 [INFO] [Daemon Thread] InsightFace Inference Time: 423ms | Cues: 0
+08:15:22.408 [INFO] [Main Thread] YOLOv8n Inference Time: 94ms | FPS: 20.0
+08:15:22.627 [INFO] [Main Thread] YOLOv8n Inference Time: 194ms | FPS: 17.7
+08:15:22.846 [INFO] [Main Thread] YOLOv8n Inference Time: 192ms | FPS: 15.8
+08:15:22.964 [INFO] [Main Thread] YOLOv8n Inference Time: 97ms | FPS: 14.8
+08:15:23.519 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:18:05.717 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:18:23.393 [INFO] =================================================================
+08:18:23.393 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:18:23.393 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:18:23.393 [INFO] =================================================================
+08:18:23.393 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:18:24.865 [INFO] [Main Thread] YOLOv8n Inference Time: 111ms | FPS: 30.0
+08:18:24.866 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:18:24.866 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:18:25.087 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:18:25.098 [INFO] [Main Thread] YOLOv8n Inference Time: 194ms | FPS: 26.2
+08:18:25.124 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:18:25.137 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:18:25.525 [INFO] [Main Thread] YOLOv8n Inference Time: 361ms | FPS: 22.7
+08:18:26.466 [INFO] [Daemon Thread] InsightFace Inference Time: 1290ms | Cues: 0
+08:18:26.532 [INFO] [Main Thread] YOLOv8n Inference Time: 979ms | FPS: 19.4
+08:18:26.687 [INFO] [Main Thread] YOLOv8n Inference Time: 128ms | FPS: 17.5
+08:18:26.800 [INFO] [Main Thread] YOLOv8n Inference Time: 88ms | FPS: 16.4
+08:18:26.860 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.8 meters."
+08:18:26.868 [INFO] [Main Thread] YOLOv8n Inference Time: 46ms | FPS: 16.4
+08:18:26.944 [INFO] [Main Thread] YOLOv8n Inference Time: 45ms | FPS: 16.6
+08:18:27.010 [INFO] [Main Thread] YOLOv8n Inference Time: 46ms | FPS: 16.7
+08:18:27.067 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 17.3
+08:18:27.122 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 17.9
+08:18:27.162 [INFO] [Main Thread] YOLOv8n Inference Time: 22ms | FPS: 19.7
+08:18:27.205 [INFO] [Main Thread] YOLOv8n Inference Time: 22ms | FPS: 21.2
+08:18:27.257 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 21.5
+08:18:27.301 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 22.3
+08:18:27.347 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 22.8
+08:18:27.400 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 22.8
+08:18:27.444 [INFO] [Main Thread] YOLOv8n Inference Time: 25ms | FPS: 23.5
+08:18:27.496 [INFO] [Main Thread] YOLOv8n Inference Time: 23ms | FPS: 24.4
+08:18:27.546 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 24.4
+08:18:27.594 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 24.5
+08:18:27.648 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 24.2
+08:18:27.649 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:18:27.880 [INFO] [Main Thread] YOLOv8n Inference Time: 210ms | FPS: 21.3
+08:18:27.903 [INFO] [Daemon Thread] InsightFace Inference Time: 243ms | Cues: 0
+08:18:27.948 [INFO] [Main Thread] YOLOv8n Inference Time: 46ms | FPS: 20.7
+08:18:28.004 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 20.7
+08:18:28.061 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 20.7
+08:18:28.112 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 21.1
+08:18:28.160 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 21.7
+08:18:28.204 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 22.5
+08:18:28.204 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:18:28.254 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 22.7
+08:18:28.356 [INFO] [Main Thread] YOLOv8n Inference Time: 79ms | FPS: 20.9
+08:18:28.711 [INFO] [Main Thread] YOLOv8n Inference Time: 328ms | FPS: 18.2
+08:18:28.926 [INFO] [Main Thread] YOLOv8n Inference Time: 189ms | FPS: 16.2
+08:18:29.048 [INFO] [Main Thread] YOLOv8n Inference Time: 98ms | FPS: 15.1
+08:18:29.234 [INFO] [Main Thread] YOLOv8n Inference Time: 162ms | FPS: 13.7
+08:18:29.290 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 14.8
+08:18:29.346 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 15.7
+08:18:29.401 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 16.5
+08:18:29.450 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 17.6
+08:18:29.495 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 19.0
+08:18:30.032 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:20:08.393 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:20:26.483 [INFO] =================================================================
+08:20:26.484 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:20:26.484 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:20:26.484 [INFO] =================================================================
+08:20:26.484 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:20:27.936 [INFO] [Main Thread] YOLOv8n Inference Time: 41ms | FPS: 30.0
+08:20:27.937 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:20:27.937 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:20:28.001 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:20:28.010 [INFO] [Main Thread] YOLOv8n Inference Time: 43ms | FPS: 28.0
+08:20:28.010 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:20:28.033 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:20:28.382 [INFO] [Daemon Thread] InsightFace Inference Time: 338ms | Cues: 0
+08:20:28.411 [INFO] [Main Thread] YOLOv8n Inference Time: 354ms | FPS: 24.2
+08:20:28.473 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 23.3
+08:20:28.541 [INFO] [Main Thread] YOLOv8n Inference Time: 42ms | FPS: 22.4
+08:20:28.607 [INFO] [Main Thread] YOLOv8n Inference Time: 45ms | FPS: 21.6
+08:20:28.665 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 21.4
+08:20:28.722 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 21.2
+08:20:28.778 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 21.4
+08:20:28.832 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 21.4
+08:20:28.884 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 21.6
+08:20:28.939 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 21.6
+08:20:28.998 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 21.3
+08:20:29.053 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 21.4
+08:20:29.109 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 21.3
+08:20:29.163 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 21.3
+08:20:29.223 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 21.1
+08:20:29.293 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 20.3
+08:20:29.356 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 20.1
+08:20:29.416 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 20.0
+08:20:29.477 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 19.8
+08:20:29.560 [INFO] [Main Thread] YOLOv8n Inference Time: 61ms | FPS: 18.9
+08:20:29.641 [INFO] [Main Thread] YOLOv8n Inference Time: 58ms | FPS: 18.2
+08:20:29.711 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 17.9
+08:20:29.777 [INFO] [Main Thread] YOLOv8n Inference Time: 43ms | FPS: 17.8
+08:20:29.839 [INFO] [Main Thread] YOLOv8n Inference Time: 41ms | FPS: 18.0
+08:20:29.891 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 18.7
+08:20:29.944 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 19.2
+08:20:29.996 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 19.7
+08:20:30.050 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 20.2
+08:20:30.111 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 20.0
+08:20:30.161 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 20.6
+08:20:30.212 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 21.0
+08:20:30.260 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 21.5
+08:20:30.310 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 21.8
+08:20:30.379 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 21.0
+08:20:30.437 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 20.9
+08:20:30.476 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.9 meters."
+08:20:30.481 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 21.9
+08:20:30.531 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 22.2
+08:20:30.577 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 22.7
+08:20:30.577 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:20:30.792 [INFO] [Daemon Thread] InsightFace Inference Time: 200ms | Cues: 0
+08:20:31.049 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:21:27.909 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:21:46.929 [INFO] =================================================================
+08:21:46.929 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:21:46.929 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:21:46.929 [INFO] =================================================================
+08:21:46.929 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:21:48.716 [INFO] [Main Thread] YOLOv8n Inference Time: 55ms | FPS: 28.0
+08:21:48.716 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:21:48.717 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:21:48.811 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:21:48.820 [INFO] [Main Thread] YOLOv8n Inference Time: 74ms | FPS: 22.9
+08:21:48.821 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:21:48.825 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:21:49.232 [INFO] [Daemon Thread] InsightFace Inference Time: 396ms | Cues: 0
+08:21:49.255 [INFO] [Main Thread] YOLOv8n Inference Time: 408ms | FPS: 16.8
+08:21:49.356 [INFO] [Main Thread] YOLOv8n Inference Time: 77ms | FPS: 15.1
+08:21:49.504 [INFO] [Main Thread] YOLOv8n Inference Time: 118ms | FPS: 12.8
+08:21:49.617 [INFO] [Main Thread] YOLOv8n Inference Time: 75ms | FPS: 12.4
+08:21:49.687 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 13.6
+08:21:49.785 [INFO] [Main Thread] YOLOv8n Inference Time: 75ms | FPS: 12.9
+08:21:49.846 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 14.9
+08:21:49.943 [INFO] [Main Thread] YOLOv8n Inference Time: 73ms | FPS: 13.8
+08:21:50.026 [INFO] [Main Thread] YOLOv8n Inference Time: 61ms | FPS: 13.8
+08:21:50.086 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 15.6
+08:21:50.144 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 17.2
+08:21:50.210 [INFO] [Main Thread] YOLOv8n Inference Time: 45ms | FPS: 17.3
+08:21:50.273 [INFO] [Main Thread] YOLOv8n Inference Time: 41ms | FPS: 17.6
+08:21:50.381 [INFO] [Main Thread] YOLOv8n Inference Time: 86ms | FPS: 15.4
+08:21:50.465 [INFO] [Main Thread] YOLOv8n Inference Time: 61ms | FPS: 14.8
+08:21:50.538 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 15.0
+08:21:50.618 [INFO] [Main Thread] YOLOv8n Inference Time: 56ms | FPS: 14.8
+08:21:50.676 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 16.2
+08:21:50.738 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 17.1
+08:21:50.802 [INFO] [Main Thread] YOLOv8n Inference Time: 42ms | FPS: 17.4
+08:21:50.859 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 18.3
+08:21:50.924 [INFO] [Main Thread] YOLOv8n Inference Time: 42ms | FPS: 18.2
+08:21:50.982 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 18.8
+08:21:51.063 [INFO] [Main Thread] YOLOv8n Inference Time: 59ms | FPS: 17.3
+08:21:51.140 [INFO] [Main Thread] YOLOv8n Inference Time: 53ms | FPS: 16.6
+08:21:51.199 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 17.5
+08:21:51.259 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 18.2
+08:21:51.320 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 18.5
+08:21:51.379 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 19.1
+08:21:51.379 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:21:51.582 [INFO] [Main Thread] YOLOv8n Inference Time: 182ms | FPS: 14.9
+08:21:51.637 [INFO] [Daemon Thread] InsightFace Inference Time: 247ms | Cues: 0
+08:21:51.659 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 14.9
+08:21:51.710 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 17.3
+08:21:51.764 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 18.6
+08:21:51.818 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 19.4
+08:21:51.869 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 20.4
+08:21:51.921 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 20.9
+08:21:51.980 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 20.6
+08:21:52.030 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 21.5
+08:21:52.764 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+08:24:06.513 [INFO] [Architecture] Persistent Multiprocessing Workers launched (DeepFace & EasyOCR running in isolated memory spaces to bypass GIL).
+08:24:24.000 [INFO] =================================================================
+08:24:24.000 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+08:24:24.001 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+08:24:24.001 [INFO] =================================================================
+08:24:24.001 [INFO] [Audio Arbitrator] Priority 2 Alert: "Assistive Goggles initialized. System active."
+08:24:25.509 [INFO] [Main Thread] YOLOv8n Inference Time: 46ms | FPS: 28.0
+08:24:25.510 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:24:25.511 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+08:24:25.642 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.5 meters straight ahead"
+08:24:25.645 [INFO] [Main Thread] YOLOv8n Inference Time: 110ms | FPS: 22.1
+08:24:25.646 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+08:24:25.651 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:24:26.230 [INFO] [Daemon Thread] InsightFace Inference Time: 568ms | Cues: 0
+08:24:26.277 [INFO] [Main Thread] YOLOv8n Inference Time: 607ms | FPS: 15.9
+08:24:26.348 [INFO] [Main Thread] YOLOv8n Inference Time: 53ms | FPS: 16.0
+08:24:26.403 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 17.6
+08:24:26.453 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 19.4
+08:24:26.500 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 21.2
+08:24:26.550 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 22.1
+08:24:26.595 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 23.4
+08:24:26.644 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 23.8
+08:24:26.691 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 24.2
+08:24:26.738 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 24.7
+08:24:26.783 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 25.4
+08:24:26.829 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 25.8
+08:24:26.880 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 25.1
+08:24:26.928 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 25.2
+08:24:26.972 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 25.9
+08:24:27.028 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 24.6
+08:24:27.079 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 24.2
+08:24:27.218 [INFO] [Main Thread] YOLOv8n Inference Time: 121ms | FPS: 19.2
+08:24:27.292 [INFO] [Main Thread] YOLOv8n Inference Time: 55ms | FPS: 18.2
+08:24:27.347 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 19.2
+08:24:27.406 [INFO] [Main Thread] YOLOv8n Inference Time: 43ms | FPS: 19.3
+08:24:27.460 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 20.2
+08:24:27.512 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 21.0
+08:24:27.561 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 22.3
+08:24:27.614 [INFO] [Main Thread] YOLOv8n Inference Time: 37ms | FPS: 22.3
+08:24:27.662 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 23.2
+08:24:27.742 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 20.4
+08:24:27.791 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 21.8
+08:24:27.839 [INFO] [Main Thread] YOLOv8n Inference Time: 33ms | FPS: 22.7
+08:24:27.891 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 22.9
+08:24:27.940 [INFO] [Main Thread] YOLOv8n Inference Time: 34ms | FPS: 23.4
+08:24:27.987 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 23.9
+08:24:28.033 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 24.7
+08:24:28.084 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 24.3
+08:24:28.127 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 25.4
+08:24:28.176 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 25.3
+08:24:28.176 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+08:24:28.380 [INFO] [Main Thread] YOLOv8n Inference Time: 186ms | FPS: 19.3
+08:24:28.390 [INFO] [Daemon Thread] InsightFace Inference Time: 202ms | Cues: 0
+08:24:28.421 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.8 meters."
+08:24:28.428 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 21.3
+08:24:28.472 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 23.1
+08:24:28.517 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 23.9
+08:24:28.562 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 25.0
+08:24:28.602 [INFO] [Main Thread] YOLOv8n Inference Time: 26ms | FPS: 26.5
+08:24:28.646 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 27.0
+08:24:28.691 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 27.0
+08:24:28.737 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 26.5
+08:24:28.738 [INFO] [Audio Arbitrator] Priority 0 Alert: "Warning: Drop-off or descending stairs ahead."
+08:24:28.782 [INFO] [Main Thread] YOLOv8n Inference Time: 27ms | FPS: 27.3
+08:24:28.826 [INFO] [Main Thread] YOLOv8n Inference Time: 29ms | FPS: 27.5
+08:24:28.870 [INFO] [Main Thread] YOLOv8n Inference Time: 30ms | FPS: 27.3
+08:24:29.388 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.

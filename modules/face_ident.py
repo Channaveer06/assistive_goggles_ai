@@ -27,16 +27,18 @@ class FaceRecognizer:
     def __init__(self, db_path=None):
         self.db_path = db_path if db_path is not None else DEFAULT_DB_PATH
         self.last_inference_time_ms = 0.0
+        self.model = None
         os.makedirs(self.db_path, exist_ok=True)
 
-        _safe_print("[FaceRecognizer] Initializing DeepFace local facial recognition engine...")
-        try:
-            # Build and load VGG-Face model into RAM on boot
-            self.model = DeepFace.build_model("VGG-Face")
-            _safe_print("[FaceRecognizer] DeepFace model preloaded into RAM.")
-        except Exception as e:
-            _safe_print(f"[FaceRecognizer] Model preload notice: {e}")
-            self.model = None
+    def _ensure_model(self):
+        """Lazily loads model into RAM only if fallback execution is needed."""
+        if self.model is None:
+            _safe_print("[FaceRecognizer] Lazily loading DeepFace fallback model into RAM...")
+            try:
+                self.model = DeepFace.build_model("VGG-Face")
+                _safe_print("[FaceRecognizer] DeepFace model loaded into RAM.")
+            except Exception as e:
+                _safe_print(f"[FaceRecognizer] Model load notice: {e}")
 
     def identify_face(self, frame_crop):
         """
@@ -45,6 +47,8 @@ class FaceRecognizer:
         """
         if frame_crop is None or not isinstance(frame_crop, np.ndarray) or frame_crop.size == 0:
             return "Unknown"
+
+        self._ensure_model()
 
         try:
             valid_exts = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
@@ -57,12 +61,14 @@ class FaceRecognizer:
                 return "Unknown"
 
             t_start = time.perf_counter()
+            time.sleep(0.01)  # Forcefully yield Python GIL to main YOLO thread
             results = DeepFace.find(
                 img_path=frame_crop,
                 db_path=self.db_path,
                 enforce_detection=False,
                 silent=True
             )
+            time.sleep(0.01)  # Yield GIL after CPU-heavy inference
             self.last_inference_time_ms = (time.perf_counter() - t_start) * 1000.0
 
             if results and len(results) > 0 and len(results[0]) > 0:
