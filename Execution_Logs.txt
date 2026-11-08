@@ -1,101 +1,210 @@
-10:37:00.000 [INFO] =================================================================
-10:37:00.001 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
-10:37:00.001 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
-10:37:00.002 [INFO] =================================================================
-10:37:00.003 [INFO] [Audio Arbitrator] Priority 0 Alert: "Assistive Goggles initialized. System active."
+10:35:43.289 [INFO] =================================================================
+10:35:43.290 [INFO] 🚀 Real-Time 30 FPS Processing Loop Active!
+10:35:43.290 [INFO]    Dual Logging Active: Console (stdout) & Execution_Logs.txt
+10:35:43.290 [INFO] =================================================================
+10:35:43.290 [INFO] [Audio Arbitrator] Priority 0 Alert: "Assistive Goggles initialized. System active."
+[00.00s | P0] [AUDIO] "Assistive Goggles initialized. System active."
+10:35:44.393 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
+10:35:44.474 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 1.8 meters straight ahead"
+[01.13s | P2] [AUDIO] "person 1.8 meters straight ahead"
+10:35:44.477 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #1...
+10:35:44.482 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:44.847 [INFO] [Daemon Thread] InsightFace Inference Time: 353ms | Cues: 0
+10:35:45.381 [INFO] [Main Thread] YOLOv8n Inference Time: 56ms | FPS: 16.6
+10:35:46.998 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:47.375 [INFO] [Daemon Thread] InsightFace Inference Time: 365ms | Cues: 0
+10:35:47.488 [INFO] [Main Thread] YOLOv8n Inference Time: 46ms | FPS: 13.0
+10:35:49.592 [INFO] [Main Thread] YOLOv8n Inference Time: 73ms | FPS: 12.8
+10:35:49.594 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:49.908 [INFO] [Daemon Thread] InsightFace Inference Time: 299ms | Cues: 0
+10:35:51.617 [INFO] [Main Thread] YOLOv8n Inference Time: 53ms | FPS: 16.3
+10:35:52.105 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:52.335 [INFO] [Daemon Thread] InsightFace Inference Time: 219ms | Cues: 0
+10:35:53.654 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 17.3
+10:35:54.699 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:54.941 [INFO] [Daemon Thread] InsightFace Inference Time: 214ms | Cues: 0
+10:35:55.666 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 16.1
+10:35:57.222 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:57.468 [INFO] [Daemon Thread] InsightFace Inference Time: 235ms | Cues: 0
+10:35:57.711 [INFO] [Main Thread] YOLOv8n Inference Time: 39ms | FPS: 17.9
+10:35:59.277 [INFO] [Audio Arbitrator] Priority 1 Alert: "Person moving closer, now 1.3 meters."
+[15.95s | P1] [AUDIO] "Person moving closer, now 1.3 meters."
+10:35:59.721 [INFO] [Main Thread] YOLOv8n Inference Time: 35ms | FPS: 20.9
+10:35:59.722 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:35:59.961 [INFO] [Daemon Thread] InsightFace Inference Time: 226ms | Cues: 0
+10:36:01.756 [INFO] [Main Thread] YOLOv8n Inference Time: 51ms | FPS: 18.5
+🔍 [ACTION] Intent-Driven Scan Mode Triggered for: cell phone...
+10:36:01.861 [INFO] [Audio Arbitrator] Priority 0 Alert: "Searching for cell phone. Please scan the room slowly."
+[18.48s | P0] [AUDIO] "Searching for cell phone. Please scan the room slowly."
+10:36:02.229 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:02.443 [INFO] [Daemon Thread] InsightFace Inference Time: 202ms | Cues: 0
+10:36:03.675 [INFO] [Audio Arbitrator] Priority 2 Alert: "Person moving away, 1.7 meters."
+[20.34s | P2] [AUDIO] "Person moving away, 1.7 meters."
+10:36:03.818 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 19.5
+10:36:04.079 [INFO] [Audio Arbitrator] Priority 0 Alert: "Found cell phone on your left, 0.2 meters away."
+[20.75s | P0] [AUDIO] "Found cell phone on your left, 0.2 meters away."
+10:36:04.425 [INFO] [Audio Arbitrator] Priority 2 Alert: "Channaveer 1.6 meters straight ahead, looking at you"
+[21.09s | P2] [AUDIO] "Channaveer 1.6 meters straight ahead, looking at you"
+10:36:04.428 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #12...
+10:36:04.743 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:04.989 [INFO] [Daemon Thread] InsightFace Inference Time: 234ms | Cues: 0
+10:36:05.846 [INFO] [Main Thread] YOLOv8n Inference Time: 51ms | FPS: 17.4
+10:36:07.315 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:07.585 [INFO] [Daemon Thread] InsightFace Inference Time: 252ms | Cues: 0
+10:36:07.881 [INFO] [Main Thread] YOLOv8n Inference Time: 58ms | FPS: 13.7
+10:36:09.212 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.2 meters on your left"
+[25.85s | P2] [AUDIO] "person 2.2 meters on your left"
+10:36:09.217 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #18...
+10:36:09.845 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:10.087 [INFO] [Daemon Thread] InsightFace Inference Time: 219ms | Cues: 0
+10:36:10.118 [INFO] [Main Thread] YOLOv8n Inference Time: 250ms | FPS: 16.4
+10:36:11.954 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 19.2
+10:36:12.368 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:12.615 [INFO] [Daemon Thread] InsightFace Inference Time: 235ms | Cues: 0
+10:36:13.323 [INFO] [Daemon Thread] DeepFace Worker Process is READY.
+10:36:14.018 [INFO] [Main Thread] YOLOv8n Inference Time: 58ms | FPS: 15.5
+10:36:14.931 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:15.190 [INFO] [Daemon Thread] InsightFace Inference Time: 247ms | Cues: 0
+10:36:15.916 [INFO] 🚨 [ACTION] Guardian Emergency SOS Triggered! Dispatching live stream link to Telegram...
+🚨 [ACTION] Guardian Emergency SOS Triggered!
+10:36:15.917 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS activated. Sharing live camera stream and current location (study room) with your registered guardian."
+[32.54s | P0] [AUDIO] "Emergency Guardian SOS activated. Sharing live camera stream and current location (study room) with your registered guardian."
+10:36:16.117 [INFO] [Main Thread] YOLOv8n Inference Time: 75ms | FPS: 13.6
+10:36:17.508 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:17.754 [INFO] [Daemon Thread] InsightFace Inference Time: 227ms | Cues: 0
+10:36:18.194 [INFO] [Main Thread] YOLOv8n Inference Time: 94ms | FPS: 11.8
+
+======================================================================
+>> [EMERGENCY GUARDIAN SOS] LIVE STREAM ACTIVE <<
+PUBLIC HTTPS STREAM LINK : https://immunize-frenzied-eject.ngrok-free.dev
+LOCAL NETWORK LINK       : http://10.164.100.119:8080 (http://localhost:8080)
+======================================================================
+
+10:36:20.026 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+[SUCCESS] [WEBHOOK] Guardian successfully notified via Telegram / Webhook (Status 200).
+10:36:20.285 [INFO] [SUCCESS] [WEBHOOK] Guardian successfully notified via Telegram / Webhook (Status 200).
+10:36:20.291 [INFO] [Daemon Thread] InsightFace Inference Time: 241ms | Cues: 0
+10:36:20.347 [INFO] [Audio Arbitrator] Priority 0 Alert: "Emergency Guardian SOS active. Secure live stream link generated."
+[32.54s | P0] [AUDIO] "Emergency Guardian SOS active. Secure live stream link generated."
+10:36:20.432 [INFO] [Main Thread] YOLOv8n Inference Time: 70ms | FPS: 12.0
+10:36:22.821 [INFO] [Main Thread] YOLOv8n Inference Time: 73ms | FPS: 9.1
+10:36:22.856 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:23.277 [INFO] [Daemon Thread] InsightFace Inference Time: 321ms | Cues: 0
+10:36:24.441 [INFO] [Audio Arbitrator] Priority 2 Alert: "Channaveer 1.7 meters straight ahead, looking at you"
+[41.09s | P2] [AUDIO] "Channaveer 1.7 meters straight ahead, looking at you"
+10:36:24.893 [INFO] [Main Thread] YOLOv8n Inference Time: 70ms | FPS: 13.7
+10:36:25.377 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:25.693 [INFO] [Daemon Thread] InsightFace Inference Time: 290ms | Cues: 0
+10:36:26.910 [INFO] [Main Thread] YOLOv8n Inference Time: 72ms | FPS: 13.0
+10:36:27.906 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:28.205 [INFO] [Daemon Thread] InsightFace Inference Time: 276ms | Cues: 0
+10:36:28.923 [INFO] [Main Thread] YOLOv8n Inference Time: 63ms | FPS: 14.1
+10:36:30.452 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:30.808 [INFO] [Daemon Thread] InsightFace Inference Time: 328ms | Cues: 0
+10:36:30.990 [INFO] [Main Thread] YOLOv8n Inference Time: 62ms | FPS: 12.7
+10:36:32.192 [INFO] [Daemon Thread] DeepFace Inference Time: 1889ms | Recognized: 'Channaveer' (Track #1)
+10:36:32.362 [INFO] [Daemon Thread] EasyOCR Worker Process is READY.
+10:36:33.034 [INFO] [Main Thread] YOLOv8n Inference Time: 68ms | FPS: 14.2
+10:36:33.036 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:33.365 [INFO] [Daemon Thread] InsightFace Inference Time: 306ms | Cues: 0
+10:36:34.519 [INFO] [Daemon Thread] DeepFace Inference Time: 232ms | Recognized: 'Channaveer' (Track #12)
+10:36:35.145 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 14.9
+10:36:35.530 [INFO] [Daemon Thread] DeepFace Inference Time: 1001ms | Result: No match found (Track #18)
+10:36:35.596 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:35.869 [INFO] [Daemon Thread] InsightFace Inference Time: 263ms | Cues: 0
+10:36:37.150 [INFO] [Main Thread] YOLOv8n Inference Time: 57ms | FPS: 15.5
+10:36:38.154 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:38.427 [INFO] [Daemon Thread] InsightFace Inference Time: 259ms | Cues: 0
+10:36:39.210 [INFO] [Main Thread] YOLOv8n Inference Time: 51ms | FPS: 16.3
+10:36:40.672 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:40.961 [INFO] [Daemon Thread] InsightFace Inference Time: 277ms | Cues: 0
+10:36:41.214 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 15.1
+10:36:43.177 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:43.475 [INFO] [Main Thread] YOLOv8n Inference Time: 276ms | FPS: 12.6
+10:36:43.488 [INFO] [Daemon Thread] InsightFace Inference Time: 299ms | Cues: 0
+10:36:44.044 [INFO] [Microphone] 🗣️ Voice Heard: "hello what happened"
+
+🗣️ [VOICE HEARD]: "hello what happened"
+
+[TALKBACK] Received 69922 bytes of guardian voice audio.
+10:36:44.193 [INFO] [Audio Arbitrator] Priority 0 Alert: "Guardian voice message incoming."
+[42.19s | P0] [AUDIO] "Guardian voice message incoming."
+10:36:45.318 [INFO] [Main Thread] YOLOv8n Inference Time: 59ms | FPS: 14.3
+10:36:45.747 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:46.014 [INFO] [Daemon Thread] InsightFace Inference Time: 255ms | Cues: 0
+10:36:47.342 [INFO] [Main Thread] YOLOv8n Inference Time: 61ms | FPS: 13.8
+10:36:48.300 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:48.583 [INFO] [Daemon Thread] InsightFace Inference Time: 271ms | Cues: 0
+10:36:49.373 [INFO] [Main Thread] YOLOv8n Inference Time: 49ms | FPS: 15.9
+10:36:50.864 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:51.129 [INFO] [Daemon Thread] InsightFace Inference Time: 254ms | Cues: 0
+10:36:51.385 [INFO] [Main Thread] YOLOv8n Inference Time: 53ms | FPS: 15.3
+10:36:53.382 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:53.678 [INFO] [Daemon Thread] InsightFace Inference Time: 283ms | Cues: 0
+10:36:53.679 [INFO] [Main Thread] YOLOv8n Inference Time: 275ms | FPS: 11.7
+10:36:55.490 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 15.6
+10:36:55.929 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:56.301 [INFO] [Daemon Thread] InsightFace Inference Time: 361ms | Cues: 0
+10:36:57.539 [INFO] [Main Thread] YOLOv8n Inference Time: 68ms | FPS: 13.0
+10:36:58.434 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:36:58.812 [INFO] [Daemon Thread] InsightFace Inference Time: 368ms | Cues: 0
+10:36:59.583 [INFO] [Main Thread] YOLOv8n Inference Time: 51ms | FPS: 16.1
+10:37:01.001 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+10:37:01.279 [INFO] [Daemon Thread] InsightFace Inference Time: 263ms | Cues: 0
+10:37:01.609 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 17.2
+10:37:03.555 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+📸 [ACTION] Live Face Enrollment Triggered...
 10:37:03.567 [INFO] [Audio Arbitrator] Priority 0 Alert: "Face enrollment triggered. Please look directly at the camera."
+[80.19s | P0] [AUDIO] "Face enrollment triggered. Please look directly at the camera."
+
+=======================================================
+👤 [FACE ENROLLMENT] Type person's name & press Enter:
+   (Auto-defaulting to 'Friend' in 5s if no input)...
 10:37:03.838 [INFO] [Daemon Thread] InsightFace Inference Time: 269ms | Cues: 0
+✅ Enrolling as: 'Friend'
+✅ [ChromaDB Drive Sync] Saved Friend permanently to your known people memory.
 10:37:08.873 [INFO] [Audio Arbitrator] Priority 0 Alert: "Saved Friend permanently to your known people memory."
-10:37:08.875 [INFO] [Daemon Thread] EasyOCR Inference Time: 1414ms | No text detected
+[80.19s | P0] [AUDIO] "Saved Friend permanently to your known people memory."
 10:37:08.928 [INFO] [Audio Arbitrator] Priority 2 Alert: "Channaveer 1.7 meters straight ahead, looking at you"
+[85.59s | P2] [AUDIO] "Channaveer 1.7 meters straight ahead, looking at you"
 10:37:08.935 [INFO] [Main Thread] YOLOv8n Inference Time: 47ms | FPS: 13.8
-10:37:08.936 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
-10:37:08.936 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:09.165 [INFO] [Daemon Thread] InsightFace Inference Time: 218ms | Cues: 0
-10:37:10.868 [INFO] [Daemon Thread] EasyOCR Inference Time: 1894ms | No text detected
-10:37:10.922 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:11.013 [INFO] [Main Thread] YOLOv8n Inference Time: 68ms | FPS: 15.4
-10:37:11.452 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:11.676 [INFO] [Daemon Thread] InsightFace Inference Time: 210ms | Cues: 0
-10:37:12.957 [INFO] [Daemon Thread] EasyOCR Inference Time: 1972ms | No text detected
 10:37:13.004 [INFO] [Main Thread] YOLOv8n Inference Time: 40ms | FPS: 17.8
-10:37:13.004 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:13.959 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:14.234 [INFO] [Daemon Thread] InsightFace Inference Time: 264ms | Cues: 0
-10:37:14.738 [INFO] [Daemon Thread] EasyOCR Inference Time: 1686ms | No text detected
-10:37:14.798 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:15.014 [INFO] [Main Thread] YOLOv8n Inference Time: 42ms | FPS: 18.0
-10:37:16.514 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
-10:37:16.527 [INFO] [Daemon Thread] EasyOCR Inference Time: 1703ms | No text detected
 10:37:16.837 [INFO] [Daemon Thread] InsightFace Inference Time: 312ms | Cues: 0
-10:37:16.877 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:17.108 [INFO] [Main Thread] YOLOv8n Inference Time: 110ms | FPS: 11.1
-10:37:18.221 [INFO] [Daemon Thread] EasyOCR Inference Time: 1332ms | No text detected
-10:37:18.537 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:19.097 [INFO] [Main Thread] YOLOv8n Inference Time: 89ms | FPS: 12.7
-10:37:19.098 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:19.449 [INFO] [Daemon Thread] InsightFace Inference Time: 341ms | Cues: 0
-10:37:20.063 [INFO] [Daemon Thread] EasyOCR Inference Time: 1502ms | No text detected
-10:37:20.103 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:21.120 [INFO] [Main Thread] YOLOv8n Inference Time: 48ms | FPS: 20.0
-10:37:21.333 [INFO] [Daemon Thread] EasyOCR Inference Time: 1211ms | No text detected
-10:37:21.644 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
-10:37:21.644 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:21.934 [INFO] [Daemon Thread] InsightFace Inference Time: 279ms | Cues: 0
-10:37:22.964 [INFO] [Daemon Thread] EasyOCR Inference Time: 1305ms | No text detected
 10:37:23.111 [INFO] [Main Thread] YOLOv8n Inference Time: 31ms | FPS: 23.0
-10:37:23.161 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:24.161 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:24.440 [INFO] [Daemon Thread] InsightFace Inference Time: 253ms | Cues: 0
-10:37:24.517 [INFO] [Daemon Thread] EasyOCR Inference Time: 1309ms | No text detected
-10:37:24.698 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:25.172 [INFO] [Main Thread] YOLOv8n Inference Time: 53ms | FPS: 18.7
 10:37:25.368 [INFO] [Audio Arbitrator] Priority 2 Alert: "person 2.3 meters on your right"
+[102.03s | P2] [AUDIO] "person 2.3 meters on your right"
 10:37:25.370 [INFO] [Daemon Thread] DeepFace Processing: Starting recognition for Track #23...
-10:37:26.189 [INFO] [Daemon Thread] EasyOCR Inference Time: 1400ms | No text detected
-10:37:26.326 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:26.702 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:27.153 [INFO] [Daemon Thread] InsightFace Inference Time: 437ms | Cues: 0
 10:37:27.228 [INFO] [Daemon Thread] DeepFace Inference Time: 1765ms | Result: No match found (Track #23)
 10:37:27.311 [INFO] [Main Thread] YOLOv8n Inference Time: 75ms | FPS: 7.4
-10:37:27.927 [INFO] [Daemon Thread] EasyOCR Inference Time: 1564ms | No text detected
-10:37:27.975 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:28.954 [INFO] [Audio Arbitrator] Priority 2 Alert: "Channaveer 1.5 meters straight ahead"
-10:37:29.239 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
+[105.61s | P2] [AUDIO] "Channaveer 1.5 meters straight ahead"
 10:37:29.517 [INFO] [Daemon Thread] InsightFace Inference Time: 267ms | Cues: 0
 10:37:29.520 [INFO] [Main Thread] YOLOv8n Inference Time: 261ms | FPS: 11.1
-10:37:29.532 [INFO] [Daemon Thread] EasyOCR Inference Time: 1480ms | No text detected
-10:37:29.583 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:30.866 [INFO] [Daemon Thread] EasyOCR Inference Time: 1222ms | No text detected
-10:37:31.115 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:31.372 [INFO] [Main Thread] YOLOv8n Inference Time: 54ms | FPS: 15.8
-10:37:31.785 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:32.186 [INFO] [Daemon Thread] InsightFace Inference Time: 392ms | Cues: 0
-10:37:32.583 [INFO] [Daemon Thread] EasyOCR Inference Time: 1423ms | No text detected
-10:37:32.624 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:33.390 [INFO] [Main Thread] YOLOv8n Inference Time: 36ms | FPS: 21.9
-10:37:33.815 [INFO] [Daemon Thread] EasyOCR Inference Time: 1172ms | No text detected
-10:37:34.131 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:34.334 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:34.588 [INFO] [Daemon Thread] InsightFace Inference Time: 245ms | Cues: 0
-10:37:35.344 [INFO] [Daemon Thread] EasyOCR Inference Time: 1183ms | No text detected
 10:37:35.438 [INFO] [Main Thread] YOLOv8n Inference Time: 32ms | FPS: 22.1
-10:37:35.661 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:36.845 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
-10:37:36.854 [INFO] [Daemon Thread] EasyOCR Inference Time: 1181ms | No text detected
 10:37:37.102 [INFO] [Daemon Thread] InsightFace Inference Time: 245ms | Cues: 0
-10:37:37.188 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
 10:37:37.477 [INFO] [Main Thread] YOLOv8n Inference Time: 38ms | FPS: 22.0
-10:37:38.372 [INFO] [Daemon Thread] EasyOCR Inference Time: 1150ms | No text detected
-10:37:38.719 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:39.369 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:39.684 [INFO] [Daemon Thread] InsightFace Inference Time: 304ms | Cues: 0
 10:37:39.786 [INFO] [Main Thread] YOLOv8n Inference Time: 50ms | FPS: 14.3
-10:37:40.010 [INFO] [Daemon Thread] EasyOCR Inference Time: 1244ms | No text detected
-10:37:40.263 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:41.472 [INFO] [Daemon Thread] EasyOCR Inference Time: 1188ms | No text detected
 10:37:41.774 [INFO] [Main Thread] YOLOv8n Inference Time: 28ms | FPS: 24.3
-10:37:41.775 [INFO] [Daemon Thread] EasyOCR Processing: Scanning spatial frame crop...
-10:37:41.900 [INFO] [Daemon Thread] InsightFace & Social Engine: Analyzing facial micro-cues...
 10:37:42.182 [INFO] [Daemon Thread] InsightFace Inference Time: 269ms | Cues: 0
+🛑 User initiated clean quit via [q] key.
+Cleaning up resources...
 10:37:43.399 [INFO] 🛑 Assistive Smart Goggles shutdown cleanly. Execution session ended.
+✅ Assistive Smart Goggles shutdown cleanly.
