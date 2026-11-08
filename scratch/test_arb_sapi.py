@@ -34,3 +34,4 @@ arb.speak("Assistive Goggles initialized. System active.")
 arb.speak("Person moving closer, now 1.8 meters.")
 pythoncom.CoUninitialize()
 print("All spoken perfectly!")
+

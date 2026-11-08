@@ -17,3 +17,4 @@ speaker.Speak("Stop! Critical hazard ahead!", SVSFPurgeBeforeSpeak | SVSFlagsAsy
 time.sleep(2.5)
 pythoncom.CoUninitialize()
 print("Done interruption test.")
+

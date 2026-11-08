@@ -35,6 +35,7 @@ class ReflexDepthEngine:
         self.track_depth_history = {}  # {track_id: [(timestamp, depth), ...]}
         self.motion_cooldowns = {}     # {track_id: (last_motion_timestamp, status)}
         self.dropoff_detected = False
+        self._dropoff_consecutive_count = 0
 
         # 2. Load Depth Anything V2 Metric Indoor (ViT-Small) -> Returns real METERS
         try:
@@ -86,10 +87,16 @@ class ReflexDepthEngine:
         Extracts bottom 30% center ground ROI and compares top vs bottom band metric depths.
         Returns: (dropoff_detected: bool, top_band_depth: float, bottom_band_depth: float)
         """
+        # Guard against uninitialized or placeholder depth map
+        if getattr(self, "latest_depth_map", None) is None or np.all(depth_map == 2.5):
+            self._dropoff_consecutive_count = 0
+            return False, 0.0, 0.0
+
         h, w = depth_map.shape[:2]
         ground_roi = depth_map[int(h * 0.7):h, int(w * 0.3):int(w * 0.7)]
         gh = ground_roi.shape[0]
         if gh < 4 or ground_roi.shape[1] < 4:
+            self._dropoff_consecutive_count = 0
             return False, 0.0, 0.0
 
         half_gh = int(gh * 0.5)
@@ -99,13 +106,21 @@ class ReflexDepthEngine:
         top_band_depth = float(np.median(top_band)) if top_band.size > 0 else 0.0
         bottom_band_depth = float(np.median(bottom_band)) if bottom_band.size > 0 else 0.0
 
-        dropoff_detected = False
+        raw_dropoff = False
         if bottom_band.size > 0 and top_band.size > 0:
-            # On flat surface, bottom_band (near feet) is closer than top_band.
-            # If bottom_band is deeper than top_band + 0.4m, or exceeds 1.5m, ground has dropped away.
-            if (bottom_band_depth > top_band_depth + 0.4) or (bottom_band_depth > 1.5):
-                dropoff_detected = True
+            # On flat ground / floor, bottom_band (near feet) is strictly CLOSER than top_band.
+            # A true negative obstacle (drop-off / descending stairs) only occurs when bottom_band
+            # is significantly DEEPER than top_band by at least 0.75m, indicating the ground falls away abruptly.
+            if top_band_depth > 0.4 and (bottom_band_depth > top_band_depth + 0.75):
+                raw_dropoff = True
 
+        if raw_dropoff:
+            self._dropoff_consecutive_count += 1
+        else:
+            self._dropoff_consecutive_count = 0
+
+        # Require at least 2 consecutive frames of negative depth gradient to prevent single-frame noise
+        dropoff_detected = (self._dropoff_consecutive_count >= 2)
         return dropoff_detected, top_band_depth, bottom_band_depth
 
     def check_frame_quality(self, frame, timestamp):

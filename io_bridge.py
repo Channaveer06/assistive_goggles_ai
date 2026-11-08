@@ -122,14 +122,26 @@ class HardwareIOBridge:
                 }
 
             resp = requests.post(webhook_url, json=payload, timeout=5)
+            import logging
+            _logger = logging.getLogger("AssistiveGoggles")
             if resp.status_code in [200, 201, 204]:
-                print(f"[SUCCESS] [WEBHOOK] Guardian successfully notified via Telegram / Webhook (Status {resp.status_code}).")
+                log_msg = f"[SUCCESS] [WEBHOOK] Guardian successfully notified via Telegram / Webhook (Status {resp.status_code})."
+                print(log_msg)
+                _logger.info(log_msg)
                 return True
             else:
-                print(f"[WARNING] [WEBHOOK] Guardian webhook returned status code {resp.status_code}: {resp.text[:120]}")
+                log_msg = f"[WARNING] [WEBHOOK] Guardian webhook returned status code {resp.status_code}: {resp.text[:120]}"
+                print(log_msg)
+                _logger.warning(log_msg)
                 return False
         except Exception as e:
-            print(f"[WARNING] [WEBHOOK] Failed to dispatch guardian webhook: {e}")
+            err_msg = f"[WARNING] [WEBHOOK] Failed to dispatch guardian webhook: {e}"
+            print(err_msg)
+            try:
+                import logging
+                logging.getLogger("AssistiveGoggles").warning(err_msg)
+            except Exception:
+                pass
             return False
 
     def release(self):

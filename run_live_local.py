@@ -248,49 +248,58 @@ class LiveLocalGogglesApp:
     def _voice_listener_worker(self):
         """Continuously listens for user voice commands without blocking OpenCV loop."""
         recognizer = sr.Recognizer()
-        recognizer.energy_threshold = 300
-        recognizer.dynamic_energy_threshold = True
-        recognizer.pause_threshold = 0.6
+        recognizer.energy_threshold = 280
+        recognizer.dynamic_energy_threshold = False
+        recognizer.pause_threshold = 0.5
 
         try:
             mic = sr.Microphone()
             with mic as source:
                 recognizer.adjust_for_ambient_noise(source, duration=0.8)
             self.mic_active = True
+            logger.info("🎙️ [MIC ONLINE] Laptop microphone listening for voice commands...")
             print("🎙️ [MIC ONLINE] Laptop microphone listening for voice commands...")
         except Exception as e:
+            logger.warning(f"Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
             print(f"⚠️ Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
             return
 
         while self.is_running:
             try:
                 with mic as source:
-                    audio = recognizer.listen(source, timeout=3.0, phrase_time_limit=4.0)
+                    audio = recognizer.listen(source, timeout=None, phrase_time_limit=5.0)
                 text = recognizer.recognize_google(audio).lower().strip()
+                logger.info(f"[Microphone] 🗣️ Voice Detected: \"{text}\"")
                 print(f"🗣️ [VOICE DETECTED]: \"{text}\"")
 
-                # 1. Detect Retrospective Memory Queries: "where did i leave my [item]", "where did i put my [item]"
-                memory_triggers = [
-                    "where did i leave my ",
-                    "where did i leave ",
-                    "where did i put my ",
-                    "where did i put ",
-                    "where did i place my ",
-                    "where did i place ",
-                    "where did i keep my ",
-                    "where did i keep "
-                ]
-                mem_item = None
-                for trigger in memory_triggers:
-                    if trigger in text:
-                        mem_item = text.split(trigger, 1)[1].strip()
-                        break
+                # 0. Emergency SOS & Assistance (Highest Priority)
+                if any(w in text for w in ["help", "sos", "emergency", "save me", "guardian"]):
+                    logger.info(f"[Microphone] 🚨 Voice Command Triggered Emergency SOS: \"{text}\"")
+                    self.voice_command_queue.put('s')
 
-                if mem_item:
-                    clean_item = mem_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
-                    if clean_item in ["phone", "cellphone"]:
-                        clean_item = "cell phone"
-                    self.voice_command_queue.put(('memory_query', clean_item))
+                # 1. Detect Retrospective Memory Queries: "where did i leave my [item]", "where did i put my [item]"
+                elif any(trigger in text for trigger in ["where did i leave", "where did i put", "where did i place", "where did i keep"]):
+                    memory_triggers = [
+                        "where did i leave my ", "where did i leave ",
+                        "where did i put my ", "where did i put ",
+                        "where did i place my ", "where did i place ",
+                        "where did i keep my ", "where did i keep "
+                    ]
+                    mem_item = None
+                    for trigger in memory_triggers:
+                        if trigger in text:
+                            mem_item = text.split(trigger, 1)[1].strip()
+                            break
+
+                    if mem_item:
+                        clean_item = mem_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
+                        if clean_item in ["phone", "cellphone"]:
+                            clean_item = "cell phone"
+                        logger.info(f"[Microphone] 🧠 Memory Recall Query for: '{clean_item}'")
+                        self.voice_command_queue.put(('memory_query', clean_item))
+                    else:
+                        self.voice_command_queue.put('m')
+
                 # 2. Detect search intent commands: "find [item]", "where is [item]", "search for [item]"
                 elif any(p in text for p in ["find ", "where is ", "search for "]):
                     search_item = None
@@ -305,13 +314,15 @@ class LiveLocalGogglesApp:
                         clean_item = search_item.replace("my ", "").replace("the ", "").replace("a ", "").strip(" .?!")
                         if clean_item in ["phone", "cellphone"]:
                             clean_item = "cell phone"
+                        logger.info(f"[Microphone] 🔍 Scan Mode Triggered for: '{clean_item}'")
                         self.voice_command_queue.put(('find', clean_item))
+                    else:
+                        self.voice_command_queue.put('f')
+
                 elif any(phrase in text for phrase in ["call guardian", "call channaveer", "call for help", "voice call"]):
                     self.voice_command_queue.put('c')
                 elif any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
                     self.voice_command_queue.put('b')
-                elif any(phrase in text for phrase in ["where did i leave", "where did i put", "recall", "last seen"]):
-                    self.voice_command_queue.put('m')
                 elif any(w in text for w in ["find", "where is", "phone", "bottle", "item"]):
                     self.voice_command_queue.put('f')
                 elif any(w in text for w in ["read", "medicine", "currency", "money", "rupee"]):
@@ -320,13 +331,17 @@ class LiveLocalGogglesApp:
                     self.voice_command_queue.put('l')
                 elif any(w in text for w in ["enroll", "save person", "save face"]):
                     self.voice_command_queue.put('e')
-                elif any(w in text for w in ["sos", "help", "emergency", "guardian"]):
-                    self.voice_command_queue.put('s')
                 elif any(w in text for w in ["quit", "exit", "stop program"]):
                     self.voice_command_queue.put('q')
-            except (sr.WaitTimeoutError, sr.UnknownValueError):
+            except sr.WaitTimeoutError:
                 continue
-            except Exception:
+            except sr.UnknownValueError:
+                continue
+            except sr.RequestError as e:
+                logger.warning(f"[Microphone] Google Speech API network error: {e}")
+                time.sleep(1.0)
+            except Exception as e:
+                logger.debug(f"[Microphone] Listener loop notice: {e}")
                 time.sleep(0.5)
 
     def _async_recognize(self, track_id, crop):
@@ -549,12 +564,14 @@ class LiveLocalGogglesApp:
 
         elif key_char == 's':
             # [s] Trigger Guardian SOS
+            logger.info("🚨 [ACTION] Guardian Emergency SOS Triggered! Dispatching live stream link to Telegram...")
             print("🚨 [ACTION] Guardian Emergency SOS Triggered!")
             msg = self.io.trigger_guardian_sos(self.current_room, timestamp=timestamp)
             self._update_hud_status(msg)
 
         elif key_char == 'c':
             # [c] Call Guardian Two-Way Voice Intercom
+            logger.info("📞 [ACTION] Call Guardian Voice Request Triggered! Dispatching live call link to Telegram...")
             print("📞 [ACTION] Call Guardian Voice Request Triggered...")
             msg = self.io.trigger_call_guardian(self.current_room, timestamp=timestamp)
             self._update_hud_status(msg)

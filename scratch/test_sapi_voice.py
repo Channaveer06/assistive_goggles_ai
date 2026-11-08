@@ -22,3 +22,4 @@ print(f"Selected voice: {voices.Item(selected_idx).GetDescription()}")
 speaker.Speak("Hello, this is the Assistive Goggles voice engine.")
 pythoncom.CoUninitialize()
 print("Voice test completed successfully!")
+
