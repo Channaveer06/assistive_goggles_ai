@@ -243,19 +243,34 @@ class LiveLocalGogglesApp:
     def _start_voice_listener(self):
         """Starts background continuous daemon thread for hands-free microphone voice recognition."""
         recognizer = sr.Recognizer()
-        recognizer.energy_threshold = 140
-        recognizer.dynamic_energy_threshold = True
-        recognizer.dynamic_energy_adjustment_damping = 0.15
-        recognizer.dynamic_energy_ratio = 1.5
-        recognizer.pause_threshold = 0.5
+        recognizer.energy_threshold = 100
+        recognizer.dynamic_energy_threshold = False  # Fixed threshold prevents self-deafening from SAPI speaker / fan
+        recognizer.pause_threshold = 0.4
+        recognizer.phrase_threshold = 0.15           # Ultra-responsive to short words like 'help'
+        recognizer.non_speaking_duration = 0.3
+
+        # Auto-detect best physical microphone device
+        mic_idx = None
+        try:
+            device_names = sr.Microphone.list_microphone_names()
+            for idx, dev_name in enumerate(device_names):
+                dev_lower = dev_name.lower()
+                if any(k in dev_lower for k in ["array", "microphone", "internal", "realtek", "headset"]) and "stereo mix" not in dev_lower:
+                    mic_idx = idx
+                    break
+        except Exception:
+            mic_idx = None
 
         try:
-            mic = sr.Microphone()
+            mic = sr.Microphone(device_index=mic_idx)
             with mic as source:
-                recognizer.adjust_for_ambient_noise(source, duration=0.8)
+                recognizer.adjust_for_ambient_noise(source, duration=0.4)
+            # Bound calibrated energy threshold so mic never goes deaf
+            recognizer.energy_threshold = max(60, min(180, recognizer.energy_threshold))
             self.mic_active = True
-            logger.info(f"🎙️ [MIC ONLINE] Continuous hands-free listener active (calibrated energy threshold: {recognizer.energy_threshold:.0f}).")
-            print(f"🎙️ [MIC ONLINE] Continuous hands-free listener active (calibrated energy: {recognizer.energy_threshold:.0f}). Say 'help', 'sos', etc.")
+            dev_str = f"device #{mic_idx}" if mic_idx is not None else "default mic"
+            logger.info(f"🎙️ [MIC ONLINE] Hands-free listener active on {dev_str} (energy threshold: {recognizer.energy_threshold:.0f}).")
+            print(f"🎙️ [MIC ONLINE] Hands-free listener active on {dev_str} (energy: {recognizer.energy_threshold:.0f}). Say 'help', 'sos', etc.")
         except Exception as e:
             logger.warning(f"Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
             print(f"⚠️ Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
@@ -268,7 +283,7 @@ class LiveLocalGogglesApp:
                 print(f"\n🗣️ [VOICE HEARD]: \"{text}\"")
 
                 # 0. Emergency SOS & Assistance (Highest Priority)
-                if any(w in text for w in ["help", "sos", "emergency", "save me", "guardian", "call help"]):
+                if any(w in text for w in ["help", "sos", "emergency", "save me", "guardian", "call help", "danger"]):
                     logger.info(f"[Microphone] 🚨 Voice Command Triggered Emergency SOS: \"{text}\"")
                     print("🚨 [VOICE TRIGGER] Emergency Guardian SOS Activated!")
                     self.voice_command_queue.put('s')
@@ -366,10 +381,12 @@ class LiveLocalGogglesApp:
                 matched_name = self.face_recognizer.identify_face(crop_detached)
                 inference_ms = (time.perf_counter() - t_start) * 1000.0
                 if matched_name and matched_name != "Unknown":
-                    self.track_identities[track_id] = matched_name
-                    logger.info(f"[Daemon Thread] DeepFace Inference Time: {inference_ms:.0f}ms | Recognized: '{matched_name}' (Track #{track_id})")
+                    from modules.reflex_depth import sanitize_person_name
+                    clean_name = sanitize_person_name(matched_name)
+                    self.track_identities[track_id] = clean_name
+                    logger.info(f"[Daemon Thread] DeepFace Inference Time: {inference_ms:.0f}ms | Recognized: '{clean_name}' (Track #{track_id})")
                 else:
-                    self.track_identities[track_id] = "Unknown person"
+                    self.track_identities[track_id] = "Person"
                     logger.info(f"[Daemon Thread] DeepFace Inference Time: {inference_ms:.0f}ms | Result: No match found (Track #{track_id})")
             except Exception as e:
                 inference_ms = (time.perf_counter() - t_start) * 1000.0
@@ -683,10 +700,12 @@ class LiveLocalGogglesApp:
                                 continue
                             tid, matched_name, duration_ms = res
                             if matched_name and matched_name != "Unknown":
-                                self.track_identities[tid] = matched_name
-                                logger.info(f"[Daemon Thread] DeepFace Inference Time: {duration_ms:.0f}ms | Recognized: '{matched_name}' (Track #{tid})")
+                                from modules.reflex_depth import sanitize_person_name
+                                clean_name = sanitize_person_name(matched_name)
+                                self.track_identities[tid] = clean_name
+                                logger.info(f"[Daemon Thread] DeepFace Inference Time: {duration_ms:.0f}ms | Recognized: '{clean_name}' (Track #{tid})")
                             else:
-                                self.track_identities[tid] = "Unknown person"
+                                self.track_identities[tid] = "Person"
                                 logger.info(f"[Daemon Thread] DeepFace Inference Time: {duration_ms:.0f}ms | Result: No match found (Track #{tid})")
                         except queue.Empty:
                             break
@@ -748,7 +767,9 @@ class LiveLocalGogglesApp:
                     current_fps = 28.0
 
                 yolo_ms = getattr(self.reflex, "last_yolo_time_ms", 28.0)
-                logger.info(f"[Main Thread] {self.yolo_model_name} Inference Time: {yolo_ms:.0f}ms | FPS: {current_fps:.1f}")
+                if (now - getattr(self, "_last_fps_log_t", 0.0)) >= 2.0:
+                    self._last_fps_log_t = now
+                    logger.info(f"[Main Thread] {self.yolo_model_name} Inference Time: {yolo_ms:.0f}ms | FPS: {current_fps:.1f}")
 
                 # Asynchronous Local Facial Recognition via DeepFace
                 if hasattr(self.reflex, "last_results") and self.reflex.last_results is not None:

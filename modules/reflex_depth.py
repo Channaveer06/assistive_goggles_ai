@@ -10,6 +10,37 @@ from ultralytics import YOLO
 from transformers import AutoImageProcessor, AutoModelForDepthEstimation
 import config
 
+# Pinhole Optical Depth Prior Parameters (Canonical physical dimensions in meters)
+CANONICAL_SIZES = {
+    "person": 1.65,
+    "cell phone": 0.15,
+    "laptop": 0.28,
+    "bottle": 0.22,
+    "cup": 0.10,
+    "chair": 0.85,
+    "tv": 0.60,
+    "book": 0.24,
+    "keyboard": 0.15,
+    "mouse": 0.10,
+}
+FOCAL_LENGTH_PX = 540.0
+
+def sanitize_person_name(name):
+    """
+    Sanitizes person identity announcements.
+    If the name resembles a camera timestamp, UUID, or track ID (e.g. 'WIN_20261107...', '20261107 20 54 56'),
+    simply returns 'person' so TTS never announces raw file digits or IDs.
+    """
+    if not name or not isinstance(name, str):
+        return "person"
+    clean = name.replace("WIN_", "").replace("_Pro", "").replace("_", " ").strip()
+    digits = sum(c.isdigit() for c in clean)
+    if digits >= 3 or clean.lower().startswith("win") or len(clean) < 2:
+        return "person"
+    if clean.lower() in ("unknown", "unknown person", "verifying...", "id"):
+        return "person"
+    return clean
+
 class ReflexDepthEngine:
     ALERT_CLASSES = {"person", "car", "motorcycle", "bus", "truck"}
 
@@ -30,9 +61,10 @@ class ReflexDepthEngine:
         self.last_depth_time_ms = 0.0
         self.model_name = "YOLOv8n"
 
-        # Tracking cooldowns and trajectory memory
+        # Tracking cooldowns, trajectory memory, and monotonic area history
         self.person_cooldowns = {}     # {track_id: last_announced_timestamp}
         self.track_depth_history = {}  # {track_id: [(timestamp, depth), ...]}
+        self.track_box_area = {}       # {track_id: (area, dist_m)} for monotonic distance enforcement
         self.motion_cooldowns = {}     # {track_id: (last_motion_timestamp, status)}
         self.dropoff_detected = False
         self._dropoff_consecutive_count = 0
@@ -71,7 +103,7 @@ class ReflexDepthEngine:
                 torch.set_num_threads(orig_threads)
                 self.latest_depth_map = d_map
                 self.last_depth_time_ms = (time.perf_counter() - t0) * 1000.0
-                time.sleep(1.5) # Throttle depth updates to ~0.7 Hz to keep CPU 100% responsive for main 30 FPS YOLO thread
+                time.sleep(0.2) # Fast yield without CPU starvation, refreshes depth smoothly
             except queue.Empty:
                 continue
             except Exception:
@@ -200,14 +232,14 @@ class ReflexDepthEngine:
             detections = []
             for box, cls_id, track_id in zip(boxes, classes, track_ids):
                 x1, y1, x2, y2 = map(int, box)
-                # Crop inner 50% of bounding box to get pure object depth (ignores background edges)
                 bw, bh = x2 - x1, y2 - y1
-                ix1, iy1 = max(0, x1 + int(bw * 0.25)), max(0, y1 + int(bh * 0.25))
-                ix2, iy2 = min(w, x2 - int(bw * 0.25)), min(h, y2 - int(bh * 0.25))
+                # Sample center 30% of bounding box to get pure object core (avoids table/wall boundary bleed)
+                ix1, iy1 = max(0, x1 + int(bw * 0.35)), max(0, y1 + int(bh * 0.35))
+                ix2, iy2 = min(w, x2 - int(bw * 0.35)), min(h, y2 - int(bh * 0.35))
 
                 roi_depth = depth_map[iy1:iy2, ix1:ix2]
-                dist_m = float(np.median(roi_depth)) if roi_depth.size > 0 else 9.9
-                detections.append((dist_m, x1, y1, x2, y2, cls_id, track_id))
+                raw_metric_m = float(np.median(roi_depth)) if roi_depth.size > 0 else 9.9
+                detections.append((raw_metric_m, x1, y1, x2, y2, cls_id, track_id))
 
             detections.sort(key=lambda item: item[0])
 
@@ -216,16 +248,43 @@ class ReflexDepthEngine:
             if len(stale_keys) > 50:
                 for k in stale_keys[:25]:
                     self.track_depth_history.pop(k, None)
+                    self.track_box_area.pop(k, None)
 
-            for dist_m, x1, y1, x2, y2, cls_id, track_id in detections:
+            for raw_metric_m, x1, y1, x2, y2, cls_id, track_id in detections:
                 label_name = self.detector.names[cls_id]
                 bw, bh = x2 - x1, y2 - y1
+                box_area = float(bw * bh)
+                frame_area = float(w * h)
+                area_ratio = box_area / max(1.0, frame_area)
+                aspect = max(bw, bh) / max(1.0, min(bw, bh))
 
                 # Disambiguate smartphone vs laptop misclassification
-                # Smartphones are handheld and vertically proportioned (bh > bw * 1.05). Laptops are physically horizontal/clamshell (bw > bh).
+                # Smartphones are handheld, smaller area (< 25% of frame) or elongated (aspect >= 1.45) or held portrait (bh >= bw * 0.95)
                 if label_name == "laptop":
-                    if bh > (bw * 1.05) or (dist_m < 1.4 and (bw * bh) < (w * h * 0.15)):
+                    if bh >= (bw * 0.95) or (aspect >= 1.45 and area_ratio < 0.28) or area_ratio < 0.18:
                         label_name = "cell phone"
+
+                # Pinhole Optical Depth Prior & Monotonic Fusion
+                # Bounding box expansion physically guarantees distance decreases as user approaches
+                dist_m = raw_metric_m
+                if label_name in CANONICAL_SIZES:
+                    target_dim = CANONICAL_SIZES[label_name]
+                    ref_px = max(bh, bw) if label_name in ("cell phone", "bottle", "cup") else max(bw, bh)
+                    if ref_px > 15:
+                        d_optical = float(np.clip((FOCAL_LENGTH_PX * target_dim) / ref_px, 0.2, 5.0))
+                        # In close proximity or on glossy surfaces (screens), fuse optical & metric
+                        if d_optical < 1.8:
+                            dist_m = float(0.65 * d_optical + 0.35 * min(raw_metric_m, d_optical * 1.25))
+                        else:
+                            dist_m = float(0.35 * d_optical + 0.65 * raw_metric_m)
+
+                # Strict track-level monotonic distance enforcement:
+                # If the bounding box expanded by >8%, distance MUST NOT increase
+                prev_area, prev_dist = self.track_box_area.get(track_id, (0.0, dist_m))
+                if prev_area > 0 and box_area > prev_area * 1.08:
+                    max_phys_dist = prev_dist * np.sqrt(prev_area / box_area) * 1.05
+                    dist_m = min(dist_m, max_phys_dist)
+                self.track_box_area[track_id] = (box_area, dist_m)
 
                 x_center_ratio = ((x1 + x2) / 2.0) / w
                 direction = self.arbitrator.get_spatial_direction(x_center_ratio)
@@ -250,9 +309,9 @@ class ReflexDepthEngine:
                 motion_status = None
                 if len(history) >= 2 and (history[-1][0] - history[0][0]) >= 0.2:
                     delta = history[-1][1] - history[0][1]
-                    if delta < -0.4:
+                    if delta < -0.35:
                         motion_status = "moving closer"
-                    elif delta > 0.4:
+                    elif delta > 0.35:
                         motion_status = "moving away"
 
                 # Color code: Red for Critical (<1.2m), Orange for Warning (<2.5m), Green for Safe
@@ -271,24 +330,25 @@ class ReflexDepthEngine:
                         if stored_id and stored_id not in ["Person", "Unknown person"]:
                             face_name = stored_id
 
-                if label_name == "person" and face_name and not face_name.startswith("Verifying"):
-                    announced_name = face_name if face_name != "Unknown person" else "person"
+                clean_face = sanitize_person_name(face_name) if face_name else "person"
+                if label_name == "person":
+                    announced_name = clean_face
                     cues_str = f", {' and '.join(face_cues)}" if face_cues else ""
                 else:
                     announced_name = label_name
                     cues_str = ""
 
-                resolved_name = self.track_identities.get(track_id, announced_name) if label_name == "person" else announced_name
+                resolved_name = sanitize_person_name(self.track_identities.get(track_id, announced_name)) if label_name == "person" else announced_name
                 cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
                 motion_tag = f" [{motion_status}]" if motion_status else ""
-                tag = f"ID#{track_id} {resolved_name}: {dist_m:.1f}m ({direction}){motion_tag}"
+                tag = f"ID#{track_id} {resolved_name.capitalize()}: {dist_m:.1f}m ({direction}){motion_tag}"
                 cv2.putText(annotated, tag, (x1, max(20, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
 
                 # Clutter Filter: Only ALERT_CLASSES trigger unprompted telemetry
                 # Everyday items (bottles, cups, chairs, phones) are suppressed unless explicitly queried in Find Mode
                 if label_name in self.ALERT_CLASSES and dist_m <= config.WARNING_DISTANCE_M:
                     last_motion_t, last_motion_type = self.motion_cooldowns.get(track_id, (0.0, None))
-                    person_label = self.track_identities.get(track_id, announced_name.capitalize()) if label_name == "person" else announced_name.capitalize()
+                    person_label = resolved_name.capitalize() if label_name == "person" else announced_name.capitalize()
 
                     if motion_status == "moving closer":
                         # Safety override: moving closer preempts the 20-second cooldown immediately
@@ -316,7 +376,7 @@ class ReflexDepthEngine:
                             self.person_cooldowns[track_id] = timestamp
                             priority = 1 if dist_m <= config.CRITICAL_DANGER_M else 2
                             prefix = "Stop! " if priority == 1 else ""
-                            cooldown_label = self.track_identities.get(track_id, announced_name) if label_name == "person" else announced_name
+                            cooldown_label = resolved_name if label_name == "person" else announced_name
                             msg = f"{prefix}{cooldown_label} {dist_m:.1f} meters {direction}{cues_str}"
                             speech_res = self.arbitrator.emit_alert(priority, msg, timestamp, key=f"trk_{track_id}")
                             if speech_res:

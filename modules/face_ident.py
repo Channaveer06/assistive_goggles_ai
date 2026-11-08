@@ -74,8 +74,12 @@ class FaceRecognizer:
             if results and len(results) > 0 and len(results[0]) > 0:
                 matched_path = results[0]["identity"].iloc[0]
                 filename = os.path.basename(matched_path)
-                name = os.path.splitext(filename)[0].capitalize()
-                return name
+                raw_name = os.path.splitext(filename)[0]
+                clean = raw_name.replace("WIN_", "").replace("_Pro", "").replace("_", " ").strip()
+                digits_cnt = sum(c.isdigit() for c in clean)
+                if digits_cnt >= 3 or clean.lower().startswith("win") or len(clean) < 2:
+                    return "Person"
+                return clean.capitalize() if clean else "Person"
         except Exception:
             pass
 

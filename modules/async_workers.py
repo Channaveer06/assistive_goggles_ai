@@ -50,7 +50,11 @@ def face_worker_loop(input_q, output_q, db_path="registered_faces"):
                         filename = os.path.basename(matched_path)
                         raw_name = os.path.splitext(filename)[0]
                         clean_name = raw_name.replace("WIN_", "").replace("_Pro", "").replace("_", " ").strip()
-                        matched_name = clean_name.capitalize() if clean_name else "Friend"
+                        digits_cnt = sum(c.isdigit() for c in clean_name)
+                        if digits_cnt >= 3 or clean_name.lower().startswith("win") or len(clean_name) < 2:
+                            matched_name = "Person"
+                        else:
+                            matched_name = clean_name.capitalize() if clean_name else "Person"
             duration_ms = (time.perf_counter() - t0) * 1000.0
             output_q.put((track_id, matched_name, duration_ms))
         except Exception:
