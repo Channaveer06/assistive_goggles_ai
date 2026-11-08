@@ -5,6 +5,13 @@ import subprocess
 import config
 
 try:
+    import pythoncom
+    import win32com.client
+except ImportError:
+    win32com = None
+    pythoncom = None
+
+try:
     import pyttsx3
 except ImportError:
     pyttsx3 = None
@@ -34,57 +41,58 @@ class PriorityAudioArbitrator:
         self.track_memory = {}       # {track_id: last_announced_timestamp}
         self.general_cooldown = {}   # {message_type: last_announced_timestamp}
         self.spoken_log = []         # History log for Colab/Local benchmarking
-        self.speech_queue = queue.PriorityQueue(maxsize=2)
+        self.speech_queue = queue.PriorityQueue(maxsize=5)
         self._msg_counter = 0
         self._stop_event = threading.Event()
         self._tts_thread = None
         self.guardian_speaking = False
         self.selected_voice_id = None
         self.selected_voice_name = "Default"
+        self.sapi_voice_index = None
 
-        # 1. Inspect & Select Native Offline Indian English Voice via pyttsx3
-        self.engine = None
-        if pyttsx3 is not None:
+        # 1. Inspect & Select Native Offline Indian English Voice
+        if win32com is not None and pythoncom is not None:
             try:
-                self.engine = pyttsx3.init()
-                # 2. Optimize Cadence: 165 words per minute, maximum volume
-                self.engine.setProperty('rate', 165)
-                self.engine.setProperty('volume', 1.0)
+                pythoncom.CoInitialize()
+                sp = win32com.client.Dispatch("SAPI.SpVoice")
+                voices = sp.GetVoices()
+                installed_names = [voices.Item(i).GetDescription() for i in range(voices.Count)]
+                print(f"[AUDIO] Installed system SAPI voices: {installed_names}")
 
-                voices = self.engine.getProperty('voices')
-                voice_names = [getattr(v, 'name', str(v)) for v in (voices or [])]
-                print(f"[AUDIO] Installed system voices: {voice_names}")
+                for i in range(voices.Count):
+                    desc = voices.Item(i).GetDescription().lower()
+                    if any(k in desc for k in ["heera", "ravi", "india"]):
+                        self.sapi_voice_index = i
+                        self.selected_voice_name = voices.Item(i).GetDescription()
+                        print(f"[AUDIO] Active SAPI voice set to Indian English: {self.selected_voice_name}")
+                        break
 
-                indian_voice = None
+                if self.sapi_voice_index is None and voices.Count > 0:
+                    self.sapi_voice_index = 0
+                    self.selected_voice_name = voices.Item(0).GetDescription()
+                    print(
+                        f"[AUDIO] Indian voice pack not detected in Windows. Using default: {self.selected_voice_name}. "
+                        "To install, go to Windows Settings -> Time & Language -> Speech -> Add Voices -> English (India)."
+                    )
+                del voices
+                del sp
+                pythoncom.CoUninitialize()
+            except Exception as e:
+                print(f"⚠️ SAPI voice inspection notice: {e}")
+
+        elif pyttsx3 is not None:
+            try:
+                engine = pyttsx3.init()
+                voices = engine.getProperty('voices')
                 for v in (voices or []):
                     v_name = getattr(v, "name", "").lower()
                     v_id = getattr(v, "id", "").lower()
                     if any(k in v_name or k in v_id for k in ["heera", "ravi", "india"]):
-                        indian_voice = v
+                        self.selected_voice_id = v.id
+                        self.selected_voice_name = getattr(v, "name", str(v))
                         break
-
-                if indian_voice is not None:
-                    self.selected_voice_id = indian_voice.id
-                    self.selected_voice_name = indian_voice.name
-                    self.engine.setProperty('voice', indian_voice.id)
-                    print(f"[AUDIO] Active voice set to Indian English: {indian_voice.name}")
-                else:
-                    default_voice = self.engine.getProperty('voice')
-                    default_name = default_voice
-                    for v in (voices or []):
-                        if getattr(v, 'id', None) == default_voice:
-                            default_name = v.name
-                            break
-                    self.selected_voice_id = default_voice
-                    self.selected_voice_name = default_name
-                    print(
-                        f"[AUDIO] Indian voice pack not detected in Windows. Using default: {default_name}. "
-                        "To install, go to Windows Settings -> Time & Language -> Speech -> Add Voices -> English (India)."
-                    )
-                self.engine.runAndWait()
             except Exception as e:
                 print(f"⚠️ pyttsx3 voice selection notice: {e}")
-                self.engine = None
 
         if config.ENV_MODE == "LOCAL":
             self._start_speech_worker()
@@ -105,18 +113,27 @@ class PriorityAudioArbitrator:
         self._tts_thread.start()
 
     def _speech_worker_loop(self):
-        """Dedicated background thread worker executing offline zero-lag TTS via pyttsx3/SAPI with PowerShell fallback."""
+        """Dedicated background thread worker executing offline zero-lag TTS via native SAPI/pyttsx3/PowerShell."""
+        sapi_voice = None
         worker_engine = None
         use_com = False
 
-        try:
-            import pythoncom
-            pythoncom.CoInitialize()
-            use_com = True
-        except Exception:
-            pass
+        if win32com is not None and pythoncom is not None:
+            try:
+                pythoncom.CoInitialize()
+                use_com = True
+                sapi_voice = win32com.client.Dispatch("SAPI.SpVoice")
+                sapi_voice.Rate = 1
+                sapi_voice.Volume = 100
+                if self.sapi_voice_index is not None:
+                    voices = sapi_voice.GetVoices()
+                    if self.sapi_voice_index < voices.Count:
+                        sapi_voice.Voice = voices.Item(self.sapi_voice_index)
+            except Exception as e:
+                print(f"⚠️ SAPI voice initialization notice: {e}")
+                sapi_voice = None
 
-        if pyttsx3 is not None:
+        if sapi_voice is None and pyttsx3 is not None:
             try:
                 worker_engine = pyttsx3.init()
                 if self.selected_voice_id:
@@ -144,7 +161,20 @@ class PriorityAudioArbitrator:
                 continue
 
             spoken = False
-            if worker_engine is not None:
+
+            # Tier 1: Native Windows SAPI.SpVoice (Direct COM, 0ms lag, supports purge interruption)
+            if sapi_voice is not None:
+                try:
+                    # SVSFPurgeBeforeSpeak = 2 if priority <= 1 else 0 (synchronous)
+                    flags = 2 if priority <= 1 else 0
+                    sapi_voice.Speak(message, flags)
+                    spoken = True
+                except Exception as e:
+                    print(f"⚠️ SAPI speech error: {e}")
+                    spoken = False
+
+            # Tier 2: pyttsx3 fallback
+            if not spoken and worker_engine is not None:
                 try:
                     worker_engine.say(message)
                     worker_engine.runAndWait()
@@ -152,6 +182,7 @@ class PriorityAudioArbitrator:
                 except Exception as e:
                     print(f"⚠️ pyttsx3 speech error: {e}")
 
+            # Tier 3: PowerShell System.Speech fallback
             if not spoken:
                 try:
                     clean_msg = message.replace("'", "''").replace('"', '`"')
@@ -159,8 +190,6 @@ class PriorityAudioArbitrator:
                         f"Add-Type -AssemblyName System.Speech; "
                         f"$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
                         f"$synth.Rate = 1; "
-                        f"$voice = $synth.GetInstalledVoices() | Where-Object {{ $_.VoiceInfo.Name -match 'Heera|Ravi|India' }} | Select-Object -First 1; "
-                        f"if ($voice) {{ $synth.SelectVoice($voice.VoiceInfo.Name) }}; "
                         f"$synth.Speak('{clean_msg}')"
                     )
                     subprocess.run(
@@ -174,15 +203,23 @@ class PriorityAudioArbitrator:
 
             self.speech_queue.task_done()
 
+        if sapi_voice is not None:
+            try:
+                # SVSFPurgeBeforeSpeak = 2
+                sapi_voice.Speak("", 2)
+            except Exception:
+                pass
+            del sapi_voice
+
         if worker_engine is not None:
             try:
                 worker_engine.stop()
             except Exception:
                 pass
+            del worker_engine
 
-        if use_com:
+        if use_com and pythoncom is not None:
             try:
-                import pythoncom
                 pythoncom.CoUninitialize()
             except Exception:
                 pass

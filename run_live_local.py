@@ -637,7 +637,7 @@ class LiveLocalGogglesApp:
         logger.info("🚀 Real-Time 30 FPS Processing Loop Active!")
         logger.info("   Dual Logging Active: Console (stdout) & Execution_Logs.txt")
         logger.info("=" * 65)
-        self.arbitrator.emit_alert(2, "Assistive Goggles initialized. System active.", time.time(), key="boot_alert")
+        self.arbitrator.emit_alert(0, "Assistive Goggles initialized. System active.", time.time(), key="boot_alert")
 
         # Warm up YOLO detector to eliminate frame-1 initialization spike
         try:
