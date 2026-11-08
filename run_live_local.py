@@ -241,15 +241,12 @@ class LiveLocalGogglesApp:
         print("=" * 65 + "\n")
 
     def _start_voice_listener(self):
-        """Starts background daemon thread for hands-free microphone voice recognition."""
-        voice_thread = threading.Thread(target=self._voice_listener_worker, daemon=True)
-        voice_thread.start()
-
-    def _voice_listener_worker(self):
-        """Continuously listens for user voice commands without blocking OpenCV loop."""
+        """Starts background continuous daemon thread for hands-free microphone voice recognition."""
         recognizer = sr.Recognizer()
-        recognizer.energy_threshold = 280
-        recognizer.dynamic_energy_threshold = False
+        recognizer.energy_threshold = 140
+        recognizer.dynamic_energy_threshold = True
+        recognizer.dynamic_energy_adjustment_damping = 0.15
+        recognizer.dynamic_energy_ratio = 1.5
         recognizer.pause_threshold = 0.5
 
         try:
@@ -257,28 +254,28 @@ class LiveLocalGogglesApp:
             with mic as source:
                 recognizer.adjust_for_ambient_noise(source, duration=0.8)
             self.mic_active = True
-            logger.info("🎙️ [MIC ONLINE] Laptop microphone listening for voice commands...")
-            print("🎙️ [MIC ONLINE] Laptop microphone listening for voice commands...")
+            logger.info(f"🎙️ [MIC ONLINE] Continuous hands-free listener active (calibrated energy threshold: {recognizer.energy_threshold:.0f}).")
+            print(f"🎙️ [MIC ONLINE] Continuous hands-free listener active (calibrated energy: {recognizer.energy_threshold:.0f}). Say 'help', 'sos', etc.")
         except Exception as e:
             logger.warning(f"Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
             print(f"⚠️ Microphone notice: {e}. Keyboard hotkeys remain 100% active.")
             return
 
-        while self.is_running:
+        def _voice_callback(r, audio):
             try:
-                with mic as source:
-                    audio = recognizer.listen(source, timeout=None, phrase_time_limit=5.0)
-                text = recognizer.recognize_google(audio).lower().strip()
-                logger.info(f"[Microphone] 🗣️ Voice Detected: \"{text}\"")
-                print(f"🗣️ [VOICE DETECTED]: \"{text}\"")
+                text = r.recognize_google(audio).lower().strip()
+                logger.info(f"[Microphone] 🗣️ Voice Heard: \"{text}\"")
+                print(f"\n🗣️ [VOICE HEARD]: \"{text}\"")
 
                 # 0. Emergency SOS & Assistance (Highest Priority)
-                if any(w in text for w in ["help", "sos", "emergency", "save me", "guardian"]):
+                if any(w in text for w in ["help", "sos", "emergency", "save me", "guardian", "call help"]):
                     logger.info(f"[Microphone] 🚨 Voice Command Triggered Emergency SOS: \"{text}\"")
+                    print("🚨 [VOICE TRIGGER] Emergency Guardian SOS Activated!")
                     self.voice_command_queue.put('s')
+                    return
 
-                # 1. Detect Retrospective Memory Queries: "where did i leave my [item]", "where did i put my [item]"
-                elif any(trigger in text for trigger in ["where did i leave", "where did i put", "where did i place", "where did i keep"]):
+                # 1. Detect Retrospective Memory Queries
+                if any(trigger in text for trigger in ["where did i leave", "where did i put", "where did i place", "where did i keep"]):
                     memory_triggers = [
                         "where did i leave my ", "where did i leave ",
                         "where did i put my ", "where did i put ",
@@ -299,9 +296,10 @@ class LiveLocalGogglesApp:
                         self.voice_command_queue.put(('memory_query', clean_item))
                     else:
                         self.voice_command_queue.put('m')
+                    return
 
                 # 2. Detect search intent commands: "find [item]", "where is [item]", "search for [item]"
-                elif any(p in text for p in ["find ", "where is ", "search for "]):
+                if any(p in text for p in ["find ", "where is ", "search for "]):
                     search_item = None
                     if "find " in text:
                         search_item = text.split("find ", 1)[1].strip()
@@ -318,8 +316,9 @@ class LiveLocalGogglesApp:
                         self.voice_command_queue.put(('find', clean_item))
                     else:
                         self.voice_command_queue.put('f')
+                    return
 
-                elif any(phrase in text for phrase in ["call guardian", "call channaveer", "call for help", "voice call"]):
+                if any(phrase in text for phrase in ["call guardian", "call channaveer", "voice call"]):
                     self.voice_command_queue.put('c')
                 elif any(w in text for w in ["bathroom", "washroom", "toilet", "nav"]):
                     self.voice_command_queue.put('b')
@@ -333,16 +332,18 @@ class LiveLocalGogglesApp:
                     self.voice_command_queue.put('e')
                 elif any(w in text for w in ["quit", "exit", "stop program"]):
                     self.voice_command_queue.put('q')
-            except sr.WaitTimeoutError:
-                continue
             except sr.UnknownValueError:
-                continue
+                pass  # Ambient sound or breath - ignore cleanly
             except sr.RequestError as e:
                 logger.warning(f"[Microphone] Google Speech API network error: {e}")
-                time.sleep(1.0)
             except Exception as e:
-                logger.debug(f"[Microphone] Listener loop notice: {e}")
-                time.sleep(0.5)
+                logger.debug(f"[Microphone] Callback notice: {e}")
+
+        # Start continuous non-blocking PortAudio worker
+        try:
+            self._stop_listening = recognizer.listen_in_background(mic, _voice_callback, phrase_time_limit=4.5)
+        except Exception as e:
+            logger.warning(f"[Microphone] listen_in_background notice: {e}")
 
     def _async_recognize(self, track_id, crop):
         """Asynchronously runs DeepFace face recognition on detached crop bypassing the GIL."""
@@ -659,7 +660,7 @@ class LiveLocalGogglesApp:
         # Warm up YOLO detector to eliminate frame-1 initialization spike
         try:
             dummy_warm = np.zeros((480, 640, 3), dtype=np.uint8)
-            self.reflex.detector.track(dummy_warm, imgsz=192, persist=True, tracker="bytetrack.yaml", verbose=False)
+            self.reflex.detector.track(dummy_warm, imgsz=256, persist=True, tracker="bytetrack.yaml", verbose=False)
         except Exception:
             pass
 
@@ -1045,6 +1046,13 @@ class LiveLocalGogglesApp:
                     self.p_face.terminate()
                 if hasattr(self, "p_ocr") and self.p_ocr.is_alive():
                     self.p_ocr.terminate()
+            except Exception:
+                pass
+
+        # Stop hands-free microphone background listener
+        if hasattr(self, "_stop_listening") and callable(self._stop_listening):
+            try:
+                self._stop_listening(wait_for_stop=False)
             except Exception:
                 pass
 

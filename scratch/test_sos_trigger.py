@@ -24,3 +24,4 @@ print("Releasing IO...")
 io.release()
 arbitrator.stop()
 print("Test completed.")
+

@@ -174,12 +174,12 @@ class ReflexDepthEngine:
         dropoff_detected, top_depth, bottom_depth = self.detect_negative_obstacle(depth_map)
         self.dropoff_detected = dropoff_detected
 
-        # Run YOLO with imgsz=224 for guaranteed sub-35ms reflex latency (>25 FPS)
+        # Run YOLO with imgsz=256 for sharp smartphone/small-object recognition while sustaining >25 FPS
         t_yolo_0 = time.perf_counter()
         try:
-            results = self.detector.track(frame, imgsz=192, persist=True, tracker="bytetrack.yaml", verbose=False)[0]
+            results = self.detector.track(frame, imgsz=256, persist=True, tracker="bytetrack.yaml", verbose=False)[0]
         except Exception:
-            results = self.detector.track(frame, imgsz=192, persist=True, tracker="botsort.yaml", verbose=False)[0]
+            results = self.detector.track(frame, imgsz=256, persist=True, tracker="botsort.yaml", verbose=False)[0]
         self.last_yolo_time_ms = (time.perf_counter() - t_yolo_0) * 1000.0
 
         self.last_results = results
@@ -219,6 +219,14 @@ class ReflexDepthEngine:
 
             for dist_m, x1, y1, x2, y2, cls_id, track_id in detections:
                 label_name = self.detector.names[cls_id]
+                bw, bh = x2 - x1, y2 - y1
+
+                # Disambiguate smartphone vs laptop misclassification
+                # Smartphones are handheld and vertically proportioned (bh > bw * 1.05). Laptops are physically horizontal/clamshell (bw > bh).
+                if label_name == "laptop":
+                    if bh > (bw * 1.05) or (dist_m < 1.4 and (bw * bh) < (w * h * 0.15)):
+                        label_name = "cell phone"
+
                 x_center_ratio = ((x1 + x2) / 2.0) / w
                 direction = self.arbitrator.get_spatial_direction(x_center_ratio)
 
