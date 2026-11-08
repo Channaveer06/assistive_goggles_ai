@@ -33,7 +33,7 @@ def sanitize_person_name(name):
     """
     if not name or not isinstance(name, str):
         return "person"
-    clean = name.replace("WIN_", "").replace("_Pro", "").replace("_", " ").strip()
+    clean = name.replace("WIN_", "").replace("_Pro", "").replace("_win", "").replace(" win", "").replace("_2", "").replace("_", " ").strip()
     digits = sum(c.isdigit() for c in clean)
     if digits >= 3 or clean.lower().startswith("win") or len(clean) < 2:
         return "person"
